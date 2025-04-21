@@ -1,0 +1,129 @@
+from jedi.inference.context import ValueContext
+from pyasn1.error import ValueConstraintError
+
+import output, datetime
+
+
+
+def db_write(data, pv_system):
+    global cur
+    # mapping = pv_system.get_mapping()
+    time_string = None
+
+    for line in data:
+        for j in range(len(line)):
+            if j == 0:
+                time_string = f"'{line[0].replace(tzinfo=None)}','{int(line[0].utcoffset().total_seconds())}'"
+                # time_string = f"'{line[0].astimezone(pytz.utc).replace(tzinfo=None)}','{line[0].utcoffset().total_seconds()}'"
+            else:
+                for tracker_counter in range (len(pv_system['inverters'])):# range(len(line[j]['dc'])):
+                    if pv_system['inverters'][tracker_counter]['is_production'] == 1:
+                        try:
+                            # print(f"insert into tracker_5min (system_id, tracker_id, timestamp, tz_offset, yield) values ('{pv_system.id}','{mapping[j - 1]}',{time_string},{line[j]})")
+                            sql_string = str(f"insert into solarlog_5min (system_id, inverter_id, tracker_id, measurement_time, "
+                                  f"tz_offset, tracker_id_text, yield) values ('{pv_system['id']}', {j+1} , {tracker_counter+1}, "
+                                  f"{time_string}, 'tr01',{line[j]['dc'][tracker_counter]})")
+                            cur.execute(sql_string)
+                        except TimeoutError as e:
+                            print(f"Error: {e}")
+                        except Exception as e:
+                            print(f"Error: {e}")
+
+
+def db_check(data, pv_system):
+    '''Check database table for updates, record all actions in solarlog_5min_old'''
+    import config
+    import psycopg2
+    con = psycopg2.connect(
+        f"dbname={config.database_name} user={config.database_user} host={config.database_host} password={config.database_password}")
+    cur = con.cursor()
+    # mapping = pv_system.get_mapping()
+    time_string = None
+    header = data.pop(0) # header string
+    for line in data:
+        datetime_now = datetime.datetime.now()
+        measurement_time = line.pop(0)
+        time_string = f"'{measurement_time.replace(tzinfo=None)}'"
+        time_string_insert = f"'{measurement_time.replace(tzinfo=None)}','{int(measurement_time.utcoffset().total_seconds())}'"
+        for inverter_counter in range(len(line)):
+            if pv_system['inverters'][inverter_counter]['is_production'] == 1:
+                for tracker_counter in range(pv_system['inverters'][inverter_counter]['nr_trackers']):
+                    try:
+                        # print(f"insert into tracker_5min (system_id, tracker_id, timestamp, tz_offset, yield) values ('{pv_system.id}','{mapping[j - 1]}',{time_string},{line[j]})")
+                        cur.execute(
+                           f"select yield from solarlog_5min where system_id = '{pv_system['id']}' and tracker_id = '{tracker_counter+1}'"
+                           f" and inverter_id = '{inverter_counter+1}' and measurement_time = {time_string}")
+                        fetched = cur.fetchone()
+                        if fetched is None:
+                            try:
+                                print(line[inverter_counter]['dc'])
+                                # print(f"insert into tracker_5min (system_id, tracker_id, timestamp, tz_offset, yield) values ('{pv_system.id}','{mapping[j - 1]}',{time_string},{line[j]})")
+                                sql_string = f"insert into solarlog_5min (system_id, inverter_id, tracker_id, tracker_id_text, measurement_time, "
+                                sql_string += f"tz_offset, yield, insertion_time) values"
+                                sql_string += f" ({pv_system['id']}, {inverter_counter+1}, {tracker_counter+1}, 'tr01', "
+                                sql_string += f"{time_string_insert},{line[inverter_counter]['dc'][tracker_counter]},'{datetime_now}')"
+                                cur.execute(sql_string)
+                                con.commit()
+                            except Exception as e:
+                                print(f"Error: {e}")
+                        else: # update
+                            fetched = fetched[0]
+                            if int(fetched) != int(line[inverter_counter]['dc'][tracker_counter]):
+                                print(f"Fetched {fetched} Parsed {line[inverter_counter]} System_id {pv_system['id']} measurement_time {time_string}")
+                                try:
+                                    # print(f"insert into tracker_5min (system_id, tracker_id, timestamp, tz_offset, yield) values ('{pv_system.id}','{mapping[j - 1]}',{time_string},{line[j]})")
+                                    dt = datetime.datetime.now()
+                                    # keeping historical records
+                                    sql_string = f"insert into solarlog_5min_old select * from solarlog_5min where "
+                                    sql_string += f"system_id = {pv_system['id']} and tracker_id = {tracker_counter+1} and "
+                                    sql_string += f"inverter_id = {inverter_counter+1} and measurement_time = {time_string};"
+                                    cur.execute(sql_string)
+                                    sql_string = f"update solarlog_5min set yield = '{line[inverter_counter]['dc'][tracker_counter]}', "
+                                    sql_string += f"insertion_time = '{dt}' where system_id = "
+                                    sql_string += f"{pv_system['id']} and tracker_id = {tracker_counter+1} and "
+                                    sql_string += f"inverter_id = {inverter_counter+1} and measurement_time = {time_string}"
+                                    cur.execute(sql_string)
+                                    con.commit()
+                                except Exception as e:
+                                    print(f"Error: {e} at updating {pv_system['id']} and {time_string}")
+                    #except Exception as e:
+                    #    print(f"Error: {e}")
+                    except ValueConstraintError as e:
+                        print(f"Error: {e}")
+    con.close()
+
+def db_check_bulk(data, pv_system, cur):
+    mapping = pv_system.get_mapping()
+    time_string = None
+    cur.execute(
+        f"select yield from solarlog_5min where system_id = '{pv_system['id']}' "
+        f"and measurement_time::date = '{datetime.date(data[0][0].strftime('%Y-%m-%d'))}'"
+        f"order by measurement_time desc, tracker_id asc")
+    fetched = cur.all()
+    fetched_offset = 0
+
+    for line in data:
+        dt = datetime.datetime.now()
+        for j in range(len(line)):
+            if j == 0:
+                time_string = f"'{line[0].replace(tzinfo=None)}'"
+                time_string_insert = f"'{line[0].replace(tzinfo=None)}','{int(line[0].utcoffset().total_seconds())}'"
+                # time_string = f"'{line[0].astimezone(pytz.utc).replace(tzinfo=None)}','{line[0].utcoffset().total_seconds()}'"
+            else:
+                if int(fetched[fetched_offset][0]) != int(line[fetched_offset]):
+                    print(f"Fetched {fetched[fetched_offset][0]} at offset {fetched_offset} Parsed {line[j]} System_id {pv_system.id} measurement_time {time_string}")
+                fetched_offset += 1
+
+
+
+def db_refresh_solarlog_day():
+    import config
+    import psycopg2
+    con = psycopg2.connect(f"dbname={config.database_name} user={config.database_user}")
+    cur = con.cursor()
+    cur.execute("refresh materialized view solarlog_day;")
+    cur.execute("refresh materialized view solarlog_5min_w_per_kwp;")
+    cur.execute("refresh materialized view solarlog_5min_w_per_kwp_inv;")
+    print("refreshing materialized view solarlog_day", file=sys.stderr)
+    con.commit()
+    con.close()

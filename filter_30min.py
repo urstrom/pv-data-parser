@@ -1,12 +1,12 @@
-import solarlog_parse_filter, re, config, solarlog_parse_library, sys, os
+import re, config, solarlog_parse_library, sys, os
 # regood = re.compile("var\\s+(Datum|Uhrzeit|Pac|aPdc|PacArr|PdcArr)\\s*=")
 regood = re.compile("var\\s+(Datum|Uhrzeit|Pac)\\s*=")
 
 def solarlog_parse_filter_day_cur(system_id):
     # def js_production_5min(system_id, day, data_root_system, file_type, encoding, pv_system):
     pv_system = solarlog_parse_library.parse_basevars_file(f"{config.path_data_raw}/{system_id}")
-    solarlog_parse_filter.js_production_5min(system_id, "min_day", f"{config.path_data_raw}/{system_id}", 'js', 'utf-8', pv_system)
-    solarlog_parse_filter.js_production_5min(system_id, "days", f"{config.path_data_raw}/{system_id}", 'js', 'utf-8', pv_system)
+    filter.js_production_5min(system_id, "min_day", f"{config.path_data_raw}/{system_id}", 'js', 'utf-8', pv_system)
+    filter.js_production_5min(system_id, "days", f"{config.path_data_raw}/{system_id}", 'js', 'utf-8', pv_system)
 
 def solarlog_parse_filter_min_cur(system_id):
     data_root_system = f"{config.path_data_raw}/{system_id}"
