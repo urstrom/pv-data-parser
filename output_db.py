@@ -25,13 +25,16 @@ def db_write(data, pv_system):
                             print(f"Error: {e}")
 
 
-def db_check(data, pv_system):
+def db_check(data, pv_system, check_active = 1):
     '''Check database table for updates, record all actions in solarlog_5min_old'''
     import config
     import psycopg2
     con = psycopg2.connect(
         f"dbname={config.database_name} user={config.database_user} host={config.database_host} password={config.database_password}")
-    cur = con.cursor()
+    cur_insert = con.cursor()
+    cur_check = con.cursor()
+    cur_update = con.cursor()
+    cur_record_update = con.cursor()
     # mapping = pv_system.get_mapping()
     time_string = None
     header = data.pop(0) # header string
@@ -40,25 +43,23 @@ def db_check(data, pv_system):
         measurement_time = line.pop(0)
         time_string = f"'{measurement_time.replace(tzinfo=None)}'"
         time_string_insert = f"'{measurement_time.replace(tzinfo=None)}','{int(measurement_time.utcoffset().total_seconds())}'"
-        for inverter_counter in range(len(line)):
+        for inverter_counter in range(len(pv_system['inverters'])):
             if pv_system['inverters'][inverter_counter]['is_production'] == 1:
                 for tracker_counter in range(pv_system['inverters'][inverter_counter]['nr_trackers']):
                     try:
                         # print(f"insert into tracker_5min (system_id, tracker_id, timestamp, tz_offset, yield) values ('{pv_system.id}','{mapping[j - 1]}',{time_string},{line[j]})")
-                        cur.execute(
-                           f"select yield from solarlog_5min where system_id = '{pv_system['id']}' and tracker_id = '{tracker_counter+1}'"
-                           f" and inverter_id = '{inverter_counter+1}' and measurement_time = {time_string}")
-                        fetched = cur.fetchone()
-                        if fetched is None:
+                        if check_active:
+                           cur_check.execute("select yield from solarlog_5min where system_id = '{pv_system['id']}' and tracker_id = '{tracker_counter+1}'  and inverter_id = '{inverter_counter+1}' and measurement_time = {time_string}")
+                           fetched = cur.fetchone()
+                        if not check_active or fetched is None:
                             try:
-                                print(line[inverter_counter]['dc'])
+                                # print(line[inverter_counter]['dc'])
                                 # print(f"insert into tracker_5min (system_id, tracker_id, timestamp, tz_offset, yield) values ('{pv_system.id}','{mapping[j - 1]}',{time_string},{line[j]})")
                                 sql_string = f"insert into solarlog_5min (system_id, inverter_id, tracker_id, tracker_id_text, measurement_time, "
                                 sql_string += f"tz_offset, yield, insertion_time) values"
                                 sql_string += f" ({pv_system['id']}, {inverter_counter+1}, {tracker_counter+1}, 'tr01', "
                                 sql_string += f"{time_string_insert},{line[inverter_counter]['dc'][tracker_counter]},'{datetime_now}')"
-                                cur.execute(sql_string)
-                                con.commit()
+                                cur_insert.execute(sql_string)
                             except Exception as e:
                                 print(f"Error: {e}")
                         else: # update
@@ -72,13 +73,12 @@ def db_check(data, pv_system):
                                     sql_string = f"insert into solarlog_5min_old select * from solarlog_5min where "
                                     sql_string += f"system_id = {pv_system['id']} and tracker_id = {tracker_counter+1} and "
                                     sql_string += f"inverter_id = {inverter_counter+1} and measurement_time = {time_string};"
-                                    cur.execute(sql_string)
+                                    cur_record_update.execute(sql_string)
                                     sql_string = f"update solarlog_5min set yield = '{line[inverter_counter]['dc'][tracker_counter]}', "
                                     sql_string += f"insertion_time = '{dt}' where system_id = "
                                     sql_string += f"{pv_system['id']} and tracker_id = {tracker_counter+1} and "
                                     sql_string += f"inverter_id = {inverter_counter+1} and measurement_time = {time_string}"
-                                    cur.execute(sql_string)
-                                    con.commit()
+                                    cur_update.execute(sql_string)
                                 except Exception as e:
                                     print(f"Error: {e} at updating {pv_system['id']} and {time_string}")
                     #except Exception as e:
