@@ -23,8 +23,8 @@ This is an array of data rows, characterized as follows:
 	* path: path information
 	* line1: original line1 of day yield file
 	* line2: original line2 of day yield file
-	* inverter offsets: list of offsets (field numbers) of inverters in a row (CSV)
-	* tracker offsets: list of trackers (filed numbers) of trackers in a row CSV
+	* inverter offsets: list of offsets (field numbers) of inverters in a CSV row
+	* tracker offsets: list of offsets (field numbers) of trackers in a CSV row
 * the other data rows ("body") each contains an array
 	* timestamps
 	* inverter dictionaries
@@ -48,6 +48,8 @@ This is a dictionary with the following keys:
 # Database format 
 
 Database format (PostgreSQL):
+
+tracker_id != 0 is tracker_id DC, tracker_id = 0 is inverter_id AC
 
 ```
 CREATE TABLE public.solarlog_5min (
