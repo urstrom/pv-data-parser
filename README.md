@@ -2,15 +2,51 @@ Data parser for PV data (currently supports Solar-Log)
 
 Maintainer: holger.blasum@urstrom.de
 
+# Files
+
 * config.py: Configuration file (password etc)
-* pvsystem.py: Abstraction of a PV system.
-* solarlog_parse_library.py: Common routines.
-* solarlog_parse_database.py: Database backend.
-* solarlog_parse.py: Parse Solar-Log files.
-* solarlog_parse_urstrom_all.py: Parse all UrStrom systems (example).
-* solarlog_parse_filter.py: Filtering SolarLog data (keep production data, remove consumption data) for display on a webserver.
-* solarlog_parse_filter_30min.py: Filtering updated data.
-  
+* solarlog_parse: Routines for parsing Solar-Log.
+* filter.py: Functions for filtering.
+* output.py: Output functions (generic/stdout/file).
+* output_db.py: Output functions to database.
+* test/*: Python unit tests.
+
+
+# Data exchange interfaces
+
+## Day data format: Used between solarlog_parse/filter/output*
+
+This is an array of data rows, characterized as follows: 
+* the first data row contains the header, which is a dictionary
+	* version: Version of the header 
+	* path: path information
+	* line1: original line1 of day yield file
+	* line2: original line2 of day yield file
+	* inverter offsets: list of offsets (field numbers) of inverters in a row (CSV)
+	* tracker offsets: list of trackers (filed numbers) of trackers in a row CSV
+* the other data rows ("body") each contains an array
+	* timestamps
+	* inverter dictionaries
+		* each inverter dictionary has the keys
+			'ac', 'dc', 'sum', 'voltage', 'temperature'
+ 
+
+## PV system representation: pv_system
+
+This is a dictionary with the following keys:
+* row_length: length of CSV row
+* inverters: list of inverters, each inverter has the keys: 
+	* name: name of inverter
+	* is_production: is it a real inverter that produces electricity or is it a placeholder for a (consumption) meter 
+	* size: size of inverter (kWp)
+	* nr_trackers: number of trackers 
+	* type: type of inverter, as per Solar-Log basevars.js format 
+* has_temperature: does the PV system store temperature data
+
+
+
+# Database format 
+
 Database format (PostgreSQL):
 
 ```

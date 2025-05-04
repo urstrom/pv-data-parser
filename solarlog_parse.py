@@ -12,16 +12,6 @@ import re, datetime, sys, os, pytz, csv, output_db, pickle
 # js_data(path, pv_system)
 # js_data_line(line)
 
-# pv_system
-## row_length: length of CSV row
-## inverters: list of inverters
-### name, is_production, size, nr_trackers, type
-## has_temperature
-
-# handover format
-## header: ['version', 'path', 'line1', 'line2', 'inverter_offsets', 'tracker_offsets']
-## list of timestamps and inverter dictionaries, each inverter dictionary has 'ac', 'dc', 'sum', 'voltage', 'temperature'
-
 def date_range(path, date_begin, date_end, parse_function, filter_functions, output_function, format="csv", encoding="utf-8", id=1):
     import config
     pv_system = js_basevars(os.path.join(path, "base_vars.js"), id)

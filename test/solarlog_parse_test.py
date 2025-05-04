@@ -3,6 +3,7 @@
 """Test cases and derived requirements.
 ."""
 
+
 # import psycopg2 # standard Python to PostgreSQL interface
 import unittest # standard Python unit testing framework
 import solarlog_parse, filter, output, output_db
