@@ -12,26 +12,12 @@ import re, datetime, sys, os, pytz, csv, output_db, pickle
 # js_data(path, pv_system)
 # js_data_line(line)
 
-def date_range(path, date_begin, date_end, parse_function, filter_functions, output_function, format="csv", encoding="utf-8", id=1):
-    import config
-    pv_system = js_basevars(os.path.join(path, "base_vars.js"), id)
-    date_begin = datetime.datetime.strptime(date_begin, "%Y-%m-%d")
-    date_end = datetime.datetime.strptime(date_end, "%Y-%m-%d")
-    delta = date_end - date_begin
-    for day in range(delta.days + 1):
-        target_date = (date_begin + datetime.timedelta(days=day)).strftime("%y%m%d")
-        print(type(output_db.db_write), file=sys.stderr)
-        data = parse_function(os.path.join(path, f"min{target_date}.{format}"), pv_system)
-        for f in filter_functions:
-            data = f(data, pv_system)
-        output_function(data, pv_system)
-
-def unpickle(path, pv_system):
-    with open(path + ".pickle", "rb") as file:
-        return pickle.load(file)
-
 def csv_data(path, pv_system, encoding='utf-8'):
-    """Parses an entire CSV min file."""
+    """Parses an entire CSV min file.
+    Arguments:
+        path: Path the CSV file.
+        pv_system: Parameters of the PV system.
+    Returns DDF (see README) or None if error is encountered"""
 
     tracker_offsets = []
     inverter_offsets = []
@@ -232,7 +218,7 @@ def js_basevars(path, id=1):
                             'size': int(values[2]), 'nr_trackers': int(values[5]), 'type': int(values[11])})
                     # line for trackers
                     # e.g. WRInfo[1][9]=new Array(18423,18423)
-                    if  varname == 'WRInfo' and len(idx_list) == 2 and idx_list[1] == "9":
+                    if varname == 'WRInfo' and len(idx_list) == 2 and idx_list[1] == "9":
                         pv_system['inverters'][-1]['trackers'] = list(map(int, values))
                 if re_is_temp.search(line): #r"^var\s+isTemp\s*=\s*true\s*$"
                     pv_system['has_temperature'] = 1
@@ -245,7 +231,10 @@ def js_basevars(path, id=1):
 
 def js_data(path, pv_system, encoding='utf-8'):
     """Parses an entire javascript min file.
-    Returns: list of timestamp and dictionaries, where each dictionary represents an inverter"""
+    Arguments:
+        path: Path the CSV file.
+        pv_system: Parameters of the PV system.
+    Returns DDF (see README) or None if error is encountered"""
     re_min = re.compile(r"^m\[mi\+\+]=\"(.*)\"\s*$")
     result = [{'version': 'js', 'path': path}]
     if os.path.isfile(path):

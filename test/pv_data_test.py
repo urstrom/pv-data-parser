@@ -6,7 +6,7 @@
 
 # import psycopg2 # standard Python to PostgreSQL interface
 import unittest # standard Python unit testing framework
-import solarlog_parse, filter, output, output_db
+import pv_data, solarlog_parse, filter, output, output_db
 
 class TestPvData(unittest.TestCase):
 
@@ -15,7 +15,7 @@ class TestPvData(unittest.TestCase):
 
 
     def __init__(self, *args, **kwargs):
-        super(TestChecks, self).__init__(*args, **kwargs)
+        super(TestPvData, self).__init__(*args, **kwargs)
 
     def setUp(self):
         "Each test flushes database state."
@@ -44,23 +44,23 @@ class TestPvData(unittest.TestCase):
         solarlog_parse.js_basevars("base_vars.js")
 
     def test_02_date_range_js(self):
-        solarlog_parse.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.js_data,
+        pv_data.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.js_data,
 [], output.data_print, format="js")
 
     def test_03_date_range_csv(self):
-        solarlog_parse.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.csv_data,
+        pv_data.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.csv_data,
 [], output.data_print)
 
     def test_04_csv_filter_pickle(self):
-        solarlog_parse.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.csv_data,
+        pv_data.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.csv_data,
 [filter.production], output.pickle_write, format="csv", id=8)
 
     def test_05_js_filter_js(self):
-        solarlog_parse.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.js_data,
+        pv_data.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.js_data,
 [filter.production, filter.good_array], output.js_write, format="js", id=8)
 
     def test_06_db(self):
-        solarlog_parse.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.unpickle,
+        pv_data.date_range("", "2025-03-01", "2025-03-01", pv_data.unpickle,
 [filter.deduplicate_zeros], output_db.db_check, format="csv", id=8)  #
 
 "Failfast can be set to True to stop early to preserve DB state. Otherwise set to False."

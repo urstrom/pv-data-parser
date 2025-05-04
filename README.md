@@ -4,6 +4,7 @@ Maintainer: holger.blasum@urstrom.de
 
 # Files
 
+* pv_data.py: main control module
 * config.py: Configuration file (password etc)
 * solarlog_parse: Routines for parsing Solar-Log.
 * filter.py: Functions for filtering.
@@ -14,7 +15,7 @@ Maintainer: holger.blasum@urstrom.de
 
 # Data exchange interfaces
 
-## Day data format: Used between solarlog_parse/filter/output*
+## DDF: Day data format: Used between solarlog_parse/filter/output*
 
 This is an array of data rows, characterized as follows: 
 * the first data row contains the header, which is a dictionary
@@ -29,7 +30,6 @@ This is an array of data rows, characterized as follows:
 	* inverter dictionaries
 		* each inverter dictionary has the keys
 			'ac', 'dc', 'sum', 'voltage', 'temperature'
- 
 
 ## PV system representation: pv_system
 

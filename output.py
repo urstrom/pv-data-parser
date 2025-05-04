@@ -1,10 +1,14 @@
-import sys, datetime, pickle, os
+import sys, datetime, pickle, os, pathlib
 
 def data_print(data, pv_system):
     print(data, file=sys.stderr)
 
 def pickle_write(data, pv_system):
-    with open(data[0]['path'] + ".pickle", "wb") as file:
+    dirname = os.path.dirname(data[0]['path'])
+    filename = pathlib.Path(data[0]['path']).stem
+    if not os.path.exists(os.path.join(dirname, "p")):
+        os.mkdir(os.path.join(dirname, "p"))
+    with open(os.path.join(dirname, "p", filename + ".pickle"), "wb") as file:
         pickle.dump(data, file)
 
 def js_write(data, pv_system):
@@ -25,6 +29,8 @@ def js_write(data, pv_system):
         output += "\"\r\n"
     dirname = os.path.dirname(header['path'])
     filename = os.path.basename(header['path'])
+    if not os.path.exists(os.path.join(dirname, "w")):
+        os.mkdir(os.path.join(dirname, "w"))
     with open(os.path.join(dirname, "w", filename), "w") as file:
         print(output, file=file)
 
