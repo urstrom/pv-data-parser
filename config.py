@@ -1,4 +1,4 @@
-path_base = '/home/xxx"'
+path_base = '/home/xxx'
 path_data_raw = path_base + '/data_raw'
 path_data_processed = path_base + '/data_processed'
 database_name = "sunshinedb"
