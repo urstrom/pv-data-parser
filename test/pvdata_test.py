@@ -8,10 +8,11 @@
 import unittest # standard Python unit testing framework
 import solarlog_parse, filter, output, output_db
 
-class TestChecks(unittest.TestCase):
+class TestPvData(unittest.TestCase):
 
     conn = None
     cur = None
+
 
     def __init__(self, *args, **kwargs):
         super(TestChecks, self).__init__(*args, **kwargs)
