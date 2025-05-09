@@ -45,7 +45,7 @@ class TestPvData(unittest.TestCase):
 
     def test_02_date_range_js(self):
         pv_data.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.js_data,
-[], output.data_print, format="js")
+[], output.data_print)
 
     def test_03_date_range_csv(self):
         pv_data.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.csv_data,
@@ -53,15 +53,15 @@ class TestPvData(unittest.TestCase):
 
     def test_04_csv_filter_pickle(self):
         pv_data.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.csv_data,
-[filter.production], output.pickle_write, format="csv", id=8)
+[filter.production], output.pickle_write, id=8)
 
     def test_05_js_filter_js(self):
         pv_data.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.js_data,
-[filter.production, filter.good_array], output.js_write, format="js", id=8)
+[filter.production, filter.good_array], output.js_write, id=8)
 
     def test_06_db(self):
         pv_data.date_range("", "2025-03-01", "2025-03-01", pv_data.unpickle,
-[filter.deduplicate_zeros], output_db.db_check, format="csv", id=8)  #
+[filter.deduplicate_zeros], output_db.db_check, id=8)  #
 
 "Failfast can be set to True to stop early to preserve DB state. Otherwise set to False."
 if __name__ == "__main__":

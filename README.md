@@ -6,7 +6,7 @@ Maintainer: holger.blasum@urstrom.de
 
 * pv_data.py: main control module
 * config.py: Configuration file (password etc)
-* solarlog_parse: Routines for parsing Solar-Log.
+* solarlog_parse.py: Routines for parsing Solar-Log.
 * filter.py: Functions for filtering.
 * output.py: Output functions (generic/stdout/file).
 * output_db.py: Output functions to database.
@@ -85,3 +85,7 @@ CREATE TABLE public.tracker (
 );
 
 ```
+
+# TYPICAL USAGE
+
+Convert this 

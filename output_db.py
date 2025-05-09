@@ -83,6 +83,7 @@ def db_check(data, pv_system, check_active = 1):
                                     print(f"Error: {e} at updating {pv_system['id']} and {time_string}")
                     except Exception as e:
                         print(f"Error: {e} at {pv_system['id']} and {time_string}")
+    con.commit()
     con.close()
 
 def db_check_bulk(data, pv_system, cur):

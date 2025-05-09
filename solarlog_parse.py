@@ -19,8 +19,8 @@ def csv_data(path, pv_system, encoding='utf-8'):
         pv_system: Parameters of the PV system.
     Returns DDF (see README) or None if error is encountered"""
 
-    tracker_offsets = []
-    inverter_offsets = []
+    path += ".csv"
+    offsets = []
     row_counter = 0
     solarlog_csv_version = '0'
 
@@ -63,8 +63,11 @@ def csv_data(path, pv_system, encoding='utf-8'):
                     print(row, file=sys.stderr)
                     pv_system['row_length'] = len(row)
                     header['line2'] = row
-                    # 1st pass: identify trackers with DC devices attached #FIXME, may be obsolete
                     pdc_fields = {}  # AC devices connected to DC trackers
+                    for l in row:
+                        if
+                    # 1st pass: identify trackers with DC devices attached #FIXME, may be obsolete
+
                     for l in row:
                         if l[1:8] == '-CH_PDC':
                             pdc_fields[l[0:1]] = 1
@@ -93,10 +96,8 @@ def csv_data(path, pv_system, encoding='utf-8'):
                         field_counter += 1
 
                     row_counter += 1
-                    print("Inverter offsets: ", inverter_offsets, file=sys.stderr)
-                    print("Tracker offsets: ", tracker_offsets, file=sys.stderr)
-                    header['inverter_offsets'] = inverter_offsets
-                    header['tracker_offsets'] = tracker_offsets
+                    print("Offsets: ", offsets, file=sys.stderr)
+                    header['offsets'] = offsets
                     result.append(header)
                     # result.append(["csv", inverter_offsets, tracker_offsets])
                     if inverter_offsets == [] or tracker_offsets == []:
@@ -120,7 +121,7 @@ def csv_data_line(parts, inverter_offsets, tracker_offsets, pv_system):
     result = [timestamp]
 
     for counter_inv in range(0, len(inverter_offsets)):
-        'inv_type == 0 ==> is inverter, not counter'
+        # inv_type == 0 ==> is inverter, not counter
         inverter = {}
         # AC value for entire inverter
         try:
@@ -141,8 +142,9 @@ def csv_data_line(parts, inverter_offsets, tracker_offsets, pv_system):
             return []
 
         if len(tracker_offsets[counter_inv]) != pv_system['inverters'][counter_inv]['nr_trackers']:
-            print(f"Parse error parse_min_line_csv {pv_system['path']} {timestamp}: tracker offsets {len(tracker_offsets[counter_inv])} != pv_trackers_no "
-                  f"{pv_system['pv_inverters'][counter_inv]['nr_trackers']}", file=sys.stderr)
+            print(f"Parse error parse_min_line_csv {pv_system['path']} {timestamp}: "
+                  f"tracker offsets {len(tracker_offsets[counter_inv])} != pv_trackers_no "
+                  f"{pv_system['inverters'][counter_inv]['nr_trackers']}", file=sys.stderr)
             return []
 
         inverter['dc'] = []
@@ -230,11 +232,13 @@ def js_basevars(path, id=1):
 
 
 def js_data(path, pv_system, encoding='utf-8'):
-    """Parses an entire javascript min file.
+    """Parses an entire Javascript min file.
     Arguments:
-        path: Path the CSV file.
+        path: Path the Javascript file (without extension).
         pv_system: Parameters of the PV system.
     Returns DDF (see README) or None if error is encountered"""
+
+    path += ".js"
     re_min = re.compile(r"^m\[mi\+\+]=\"(.*)\"\s*$")
     result = [{'version': 'js', 'path': path}]
     if os.path.isfile(path):
@@ -251,8 +255,12 @@ def js_data(path, pv_system, encoding='utf-8'):
                     line_result = [timestamp]
 
                     for inverter_counter in range(len(pv_system['inverters'])):
-                        if pv_system['inverters'][inverter_counter]['is_production'] == 1:
+                        try:
                             inverter_input = data.pop(0)
+                        except IndexError:
+                            print(f"Inverter input too short {path}", file=sys.stderr)
+                            return result
+                        if pv_system['inverters'][inverter_counter]['is_production'] == 1:
                             inverter_output = {'ac': int(inverter_input.pop(0))}
                             nr_trackers = min(pv_system['inverters'][inverter_counter]['nr_trackers'], 3)
                             # 3-tracker limit in JS files
