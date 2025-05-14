@@ -20,17 +20,15 @@ def csv_data(path, pv_system, encoding='utf-8'):
     Returns DDF (see README) or None if error is encountered"""
 
     path += ".csv"
-    offsets = []
     row_counter = 0
     solarlog_csv_version = '0'
-
     result = []
-    header = {'path': path} # first row of header
+    header = {'path': path, 'offsets': []} # first row of header
 
     if os.path.isfile(path):
         print("csv_data: parsing " + path, file=sys.stderr)
-        with open(path, newline='', encoding=encoding) as f:
-            reader = csv.reader(f, delimiter=';', quotechar='\"')
+        with open(path, newline='', encoding=encoding) as i:
+            reader = csv.reader(i, delimiter=';', quotechar='\"')
             for row in reader:
                 if row_counter == 0:
                     # is header row
@@ -44,18 +42,16 @@ def csv_data(path, pv_system, encoding='utf-8'):
                         header['version'] = 'csv'
                         header['line1'] = row
                         print("Old CSV without version", file=sys.stderr)
-                        field_counter = 0
-                        for l in row:
-                            # if l[0:3] == 'Pac':  # German or English
-                            if l == 'Pac':  # German or English
-                                inverter_offsets.append(field_counter)
-                                print(f"adding inverter Pac {field_counter}", file=sys.stderr)
-                                tracker_offsets.append([])
-                            if l[0:3] == 'Pdc':  # tracker DC
-                                tracker_offsets[-1].append(field_counter)
-                            field_counter += 1
-                        header['inverter_offsets'] = inverter_offsets
-                        header['tracker_offsets'] = tracker_offsets
+                        field_counter = range(2, len(row))  # skip date and time at beginning
+                        inverter_counter = -1 # set to -1 to allow incrementing when finding 'INV'
+                        for i in field_counter:
+                            if row[i] == 'INV':
+                                inverter_counter += 1
+                                header['offsets'].append({'dc': []})
+                            if row[i] == 'Pac':  # German or English
+                                header['offsets'][inverter_counter]['ac'] = i
+                            if row[i][0:3] == 'Pdc':  # tracker DC
+                                header['offsets'][inverter_counter]['dc'].append(i)
                         result.append(header)
                     row_counter += 1
                 elif row_counter == 1 and solarlog_csv_version == '1.0.0':
@@ -63,96 +59,77 @@ def csv_data(path, pv_system, encoding='utf-8'):
                     print(row, file=sys.stderr)
                     pv_system['row_length'] = len(row)
                     header['line2'] = row
-                    pdc_fields = {}  # AC devices connected to DC trackers
-                    for l in row:
-                        if
-                    # 1st pass: identify trackers with DC devices attached #FIXME, may be obsolete
+                    inverter_counter = -1
+                    re_1_0_0_field = re.compile("(\d)-(.*)")
 
-                    for l in row:
-                        if l[1:8] == '-CH_PDC':
-                            pdc_fields[l[0:1]] = 1
-                    # 2nd pass; identify inverters
-                    field_counter = 0  # keep track of field offsets
-                    # mapping of inverter numbers to possibly lower count (if some "inverters") are something else
-                    inverter_numbers = {}
-                    inverter_counter = 0
-                    for l in row:
-                        if l[0:1] in pdc_fields or True: #FIXME
-                            if l[1:10] == '-CH_PAC-0':
-                                print(f"adding inverter {l[0:10]} {field_counter} ", file=sys.stderr, end='')
-                                inverter_offsets.append(field_counter)
-                                tracker_offsets.append([])
-                                inverter_numbers[l[0:1]] = inverter_counter
-                                inverter_counter += 1
-                        field_counter += 1
-                    # 3rd pass: identify trackers
-                    field_counter = 0
-                    for l in row:
-                        if l[0:1] in pdc_fields:
-                            if l[1:9] == '-CH_PDC-':
-                                # print(f"adding tracker {l[0:10]} {field_counter}", file=sys.stderr)
-                                # print(f"field counter{field_counter}, tracker_offsets{tracker_offsets}, ", file=sys.stderr)
-                                tracker_offsets[inverter_numbers[l[0:1]]].append(field_counter)
-                        field_counter += 1
-
-                    row_counter += 1
-                    print("Offsets: ", offsets, file=sys.stderr)
-                    header['offsets'] = offsets
-                    result.append(header)
-                    # result.append(["csv", inverter_offsets, tracker_offsets])
-                    if inverter_offsets == [] or tracker_offsets == []:
+                    field_counter = range(2, len(row))  # skip date and time at beginning
+                    for i in field_counter:
+                        m = re_1_0_0_field.match(row[i])
+                        number = m.group(1)
+                        if int(number) > inverter_counter:
+                            inverter_counter = int(number)
+                            header['offsets'].append({'dc': []})
+                        if row[i][2:10] == 'CH_PAC-0' or row[i][2:15] == 'CH_PAC_CHARGE':
+                            header['offsets'][inverter_counter]['ac'] = i
+                        if row[i][2:8] == 'CH_PDC':
+                            header['offsets'][inverter_counter]['dc'].append(i)
+                    if header['offsets'] == []:
                         print(f"Parse error {pv_system['path']}: Invalid offsets, file=sys.stderr", file=sys.stderr)
                         return []
+                    result.append(header)
+                    row_counter += 1
                 else:  # is data row
-                    csv_data = csv_data_line(row, inverter_offsets, tracker_offsets, pv_system)
+                    csv_data = csv_data_line(row, header['offsets'], pv_system)
                     if csv_data != []: # case where an error has occurred in csv_data_line
                         result.append(csv_data)
         return result
 
 
-def csv_data_line(parts, inverter_offsets, tracker_offsets, pv_system):
+def csv_data_line(parts, offsets, pv_system):
     """Parses a line of CSV min file."""
     """Returns a list of dictionaries for each inverter"""
     if len(parts) == 0:
-        print(f"Parse error parse_min_line_csv {pv_system['path']} (too little parts): ")
+        print(f"Parse error csv_data_line {pv_system['id']} {pv_system['path']} (too little parts): ")
         return
     timestamp = pytz.timezone('Europe/Brussels').localize(
         datetime.datetime.strptime(parts[0] + " " + parts[1], "%d.%m.%y %H:%M:%S"))
     result = [timestamp]
 
-    for counter_inv in range(0, len(inverter_offsets)):
+    for inverter_counter in range(0, len(offsets)):
         # inv_type == 0 ==> is inverter, not counter
         inverter = {}
         # AC value for entire inverter
         try:
-            if good_value(parts[inverter_offsets[counter_inv]], str(parts)):
-                inverter['ac'] = int(parts[inverter_offsets[counter_inv]])
+            if 'ac' not in offsets[inverter_counter]: # e.g. battery
+                inverter['ac'] = None
+            elif good_value(parts[offsets[inverter_counter]['ac']], str(parts)):
+                inverter['ac'] = int(parts[offsets[inverter_counter]['ac']])
             else:
-                print(f"Parse error parse_min_line_csv {pv_system['path']} {timestamp}: appending "
-                    f"{counter_inv}", file=sys.stderr)
+                print(f"Parse error csv_data_line id: {pv_system['id']} path: {pv_system['path']} {timestamp}: appending "
+                    f"{inverter_counter}", file=sys.stderr)
                 return []
 
         except ValueError:
-            print(f"Parse error parse_min_line_csv {pv_system['path']} {timestamp} Exception: "
-                  f"INV {str(counter_inv)} of (total) {str(len(inverter_offsets))} "
-                  f"position {inverter_offsets[counter_inv]} "
+            print(f"Parse error csv_data_line id: {pv_system['id']} path: {pv_system['path']} {timestamp} Exception: "
+                  f"INV {str(inverter_counter)} of (total) {str(len(offsets))} "
+                  f"position {offsets[inverter_counter]['inverter']} "
                   f"parts {str(parts)}"
                   f"result {str(result)} ",
                   file=sys.stderr)
             return []
 
-        if len(tracker_offsets[counter_inv]) != pv_system['inverters'][counter_inv]['nr_trackers']:
-            print(f"Parse error parse_min_line_csv {pv_system['path']} {timestamp}: "
-                  f"tracker offsets {len(tracker_offsets[counter_inv])} != pv_trackers_no "
-                  f"{pv_system['inverters'][counter_inv]['nr_trackers']}", file=sys.stderr)
+        if len(offsets[inverter_counter]['dc']) != pv_system['inverters'][inverter_counter]['nr_trackers']:
+            print(f"Parse error csv_data_line pv_system id: {pv_system['id']} path: {pv_system['path']}, inverter {inverter_counter}, {timestamp}: "
+                  f"tracker offsets {len(offsets[inverter_counter]['dc'])} != pv_trackers_no "
+                  f"{pv_system['inverters'][inverter_counter]['nr_trackers']}", file=sys.stderr)
             return []
 
         inverter['dc'] = []
-        for i in range(0, len(tracker_offsets[counter_inv])):
-            if good_value(parts[tracker_offsets[counter_inv][i]], str(parts)):
-                inverter['dc'].append(int(parts[tracker_offsets[counter_inv][i]]))
+        for i in range(0, len(offsets[inverter_counter]['dc'])):
+            if good_value(parts[offsets[inverter_counter]['dc'][i]], str(parts)):
+                inverter['dc'].append(int(parts[offsets[inverter_counter]['dc'][i]]))
             else:
-                print(f"Parse error parse_min_line_csv {pv_system['path']} {timestamp}: bad value", file=sys.stderr)
+                print(f"Parse error cvs_data_line id: {pv_system['id']} path: {pv_system['path']} {timestamp}: bad value", file=sys.stderr)
                 return []
         result.append(inverter)
     return result

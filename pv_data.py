@@ -8,6 +8,9 @@ def date_range(path, date_begin, date_end, parse_function, filter_functions, out
     path: files with data
     date_begin: date to begin with
     date_end: date to end with"""
+    if not os.path.exists (os.path.abspath(path)):
+        print(f"Path does not exist: {path}", file = sys.stderr)
+        return
     pv_system = solarlog_parse.js_basevars(os.path.join(path, "base_vars.js"), id)
     date_begin = datetime.datetime.strptime(date_begin, "%Y-%m-%d")
     date_end = datetime.datetime.strptime(date_end, "%Y-%m-%d")
@@ -53,7 +56,8 @@ def range_urstrom_all(root, date_begin, date_end, filter_functions, output_funct
 
 if __name__ == "__main__":
     if True:
-        range_urstrom_all("/home/hbl/u/comp/hint/fs/web/monitoring/anlagen/", "2024-01-05", "2024-01-06", [filter.production, filter.deduplicate_zeros],
+        range_urstrom_all("/home/hbl/u/comp/hint/fs/web/monitoring/anlagen/",
+                          "2024-01-05", "2024-01-06", [filter.production, filter.deduplicate_zeros],
                           output.pickle_write)
     if False:
         date_range("/home/hbl/u/comp/hint/fs/web/monitoring/anlagen/13", "2016-03-01", "2025-04-01", solarlog_parse.csv_data,
