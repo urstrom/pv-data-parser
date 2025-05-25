@@ -30,25 +30,23 @@ def compare(system_id_set, begin_time, end_time):
             cur_old.execute(sql_string_old)
             for inverter_id in range(1, len(pv_system['inverters'])+1):
                 if pv_system['inverters'][inverter_id - 1]['is_production']:
-                    for timestamp in ["2024-01-05 11:05:00"]:
-                        fetch_old = cur_old.fetchone()
-                        sql_string_new = \
-                            f"select yield from solarlog_5min where system_id = {system_id} and tracker_id = 0 " \
-                            f"and inverter_id = {inverter_id} and measurement_time = '{timestamp}';"
-                        cur_new.execute(sql_string_new)
-                        fetch_new = cur_new.fetchone()
-                        compare_single(system_id, inverter_id, 0, timestamp, fetch_new, fetch_old)
+                    fetch_old = cur_old.fetchone()
+                    sql_string_new = \
+                        f"select yield from solarlog_5min where system_id = {system_id} and tracker_id = 0 " \
+                        f"and inverter_id = {inverter_id} and measurement_time = '{measurement_time}';"
+                    cur_new.execute(sql_string_new)
+                    fetch_new = cur_new.fetchone()
+                    compare_single(system_id, inverter_id, 0, measurement_time, fetch_new, fetch_old)
             for inverter_id in range(1, len(pv_system['inverters']) + 1):
                 if pv_system['inverters'][inverter_id - 1]['is_production']:
                     for tracker_id in range(1, pv_system['inverters'][inverter_id - 1]['nr_trackers'] + 1):
-                        for timestamp in ["2024-01-05 11:05:00"]:
-                            sql_string_new = \
-                                f"select yield from solarlog_5min where system_id = {system_id} and tracker_id = {tracker_id} " \
-                                f"and inverter_id = {inverter_id} and measurement_time = '{timestamp}';"
-                            cur_new.execute(sql_string_new)
-                            fetch_new = cur_new.fetchone()
-                            fetch_old = cur_old.fetchone()
-                            compare_single(system_id, inverter_id, tracker_id, timestamp, fetch_new, fetch_old)
+                        sql_string_new = \
+                            f"select yield from solarlog_5min where system_id = {system_id} and tracker_id = {tracker_id} " \
+                            f"and inverter_id = {inverter_id} and measurement_time = '{measurement_time}';"
+                        cur_new.execute(sql_string_new)
+                        fetch_new = cur_new.fetchone()
+                        fetch_old = cur_old.fetchone()
+                        compare_single(system_id, inverter_id, tracker_id, measurement_time, fetch_new, fetch_old)
             measurement_time += datetime.timedelta(minutes=5)
 
 compare( [1] + list(range(4,18)),  "2024-01-05 11:05:00", "2024-01-05 11:05:00")

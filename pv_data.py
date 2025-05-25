@@ -55,19 +55,20 @@ def range_urstrom_all(root, date_begin, date_end, filter_functions, output_funct
 
 
 if __name__ == "__main__":
-    if True:
-        date_range("/home/hbl/u/comp/hint/fs/web/monitoring/anlagen/08", "2024-05-01", "2025-05-23", solarlog_parse.csv_data,
-                           [filter.production], output.pickle_write, format="csv", id=8)
     if False:
-        range_urstrom_all("/home/hbl/u/comp/hint/fs/web/monitoring/anlagen/",
-                          "2024-01-05", "2024-01-06", [filter.production, filter.deduplicate_zeros, filter.time_filter],
+        date_range(f"{config.path_base}/08", "2024-01-01", "2025-05-23",
+               solarlog_parse.js_data,
+               [filter.production], output.pickle_write, id=8)
+    if True:
+        range_urstrom_all(config.path_base,
+                          "2024-01-01", "2024-01-06", [filter.production, filter.deduplicate_zeros, filter.time_filter],
                           output_db.db_check)
     if False:
-        range_urstrom_all("/home/hbl/u/comp/hint/fs/web/monitoring/anlagen/",
+        range_urstrom_all(config.path_base,
                           "2024-01-05", "2024-01-06", [filter.production, filter.deduplicate_zeros],
                           output.pickle_write)
     if False: # on server
-        date_range(f"{config.path_base}/13", "2020-01-01", "2024-12-31", unpickle, [], output_db.db_check, format="csv", id=13)
+        date_range(f"{config.path_base}/13", "2020-01-01", "2024-12-31", unpickle, [], output_db.db_check, id=13)
     if False:
         date_range("/home/hbl/u/comp/hint/fs/web/monitoring/anlagen/13", "2016-03-01", "2025-04-01", solarlog_parse.csv_data,
                            [filter.production], output.pickle_write, format="csv", id=8)

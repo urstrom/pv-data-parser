@@ -25,7 +25,7 @@ def db_write(data, pv_system):
                             print(f"Error: {e} from db_write")
 
 
-def db_check(data, pv_system, check_active = 1):
+def db_check(data, pv_system):
     '''Check database table for updates, record all actions in solarlog_5min_old'''
     import config
     import psycopg2
@@ -52,10 +52,12 @@ def db_check(data, pv_system, check_active = 1):
                             data_point = line[inverter_counter]['ac']
                         else:
                             data_point = line[inverter_counter]['dc'][tracker_counter - 1] #-1: the first is used for ac
-                        if check_active:
-                           cur_check.execute(f"select yield from solarlog_5min where system_id = '{pv_system['id']}' and tracker_id = '{tracker_counter}'  and inverter_id = '{inverter_counter+1}' and measurement_time = {time_string}")
-                           fetched = cur_check.fetchone()
-                        if not check_active or fetched is None:
+                        sql_string = f"select yield from solarlog_5min where system_id = {pv_system['id']}" \
+                            f" and inverter_id = {inverter_counter+1} and tracker_id = {tracker_counter}" \
+                            f" and measurement_time = {time_string};"
+                        cur_check.execute(sql_string)
+                        fetched = cur_check.fetchone()
+                        if fetched is None:
                             try:
                                 sql_string = f"insert into solarlog_5min (system_id, inverter_id, tracker_id, tracker_id_text, measurement_time, "
                                 sql_string += f"tz_offset, yield, insertion_time) values"
