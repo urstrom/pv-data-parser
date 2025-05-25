@@ -20,9 +20,9 @@ def db_write(data, pv_system):
                                   f"{time_string}, 'tr01',{line[j]['dc'][tracker_counter]})")
                             cur.execute(sql_string)
                         except TimeoutError as e:
-                            print(f"Error: {e}")
+                            print(f"Error: {e} from db_write")
                         except Exception as e:
-                            print(f"Error: {e}")
+                            print(f"Error: {e} from db_write")
 
 
 def db_check(data, pv_system, check_active = 1):
@@ -62,7 +62,7 @@ def db_check(data, pv_system, check_active = 1):
                                 sql_string += f"{time_string_insert},{data_point},'{datetime_now}')"
                                 cur_insert.execute(sql_string)
                             except Exception as e:
-                                print(f"Error: {e}")
+                                print(f"Error: db_check1 {e}")
                         else: # update
                             fetched = fetched[0]
                             if int(fetched) != data_point:

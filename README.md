@@ -23,8 +23,7 @@ This is an array of data rows, characterized as follows:
 	* path: path information
 	* line1: original line1 of day yield file
 	* line2: original line2 of day yield file
-	* inverter offsets: list of offsets (field numbers) of inverters in a CSV row
-	* tracker offsets: list of offsets (field numbers) of trackers in a CSV row
+	* offsets: list of offsets of inverters and trackers in a CSV row
 * the other data rows ("body") each contains an array
 	* timestamps
 	* inverter dictionaries

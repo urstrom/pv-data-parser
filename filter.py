@@ -1,4 +1,4 @@
-import sys
+import sys, datetime
 
 def production(array_in, pv_system):
     array_out = [array_in.pop(0)] # header
@@ -103,5 +103,19 @@ def deduplicate_zeros(input_table, pv_system = None):
                 skip_mode = 0
     return result
 
-
+def time_filter(input_table, pv_system):
+    """Deletes repetitions of lines that have all 0 value. One copy of all-zero line is kept at each boundary.
+    Also keep lines where the interval to preceding line is not 5 minutes."""
+    result = []
+    begin_time = end_time = datetime.time.fromisoformat("11:05:00")
+    if input_table is None:
+        return result
+    result.append(input_table.pop(0)) # header file
+    skip_mode = 0  # if skip_mode == 1, then are we in a region where we are skipping, because all values are zeros
+    last_line_inserted = -1  # pointer to avoid inserting a line twice
+    # skip first line, it is the header line
+    for r in input_table:
+        if r[0].time() >= begin_time and r[0].time() <= end_time:
+            result.append(r)
+    return result
 

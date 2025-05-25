@@ -55,6 +55,10 @@ class TestPvData(unittest.TestCase):
         pv_data.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.csv_data,
 [filter.production], output.pickle_write, id=8)
 
+    def test_04_time_filter_pickle(self):
+            pv_data.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.csv_data,
+                               [filter.production, filter.time_filter], output.data_print, id=8)
+
     def test_05_js_filter_js(self):
         pv_data.date_range("", "2025-03-01", "2025-03-01", solarlog_parse.js_data,
 [filter.production, filter.good_array], output.js_write, id=8)
