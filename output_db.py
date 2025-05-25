@@ -38,6 +38,7 @@ def db_check(data, pv_system, check_active = 1):
     # mapping = pv_system.get_mapping()
     time_string = None
     header = data.pop(0) # header string
+    count = 0
     for line in data:
         datetime_now = datetime.datetime.now()
         measurement_time = line.pop(0)
@@ -61,6 +62,9 @@ def db_check(data, pv_system, check_active = 1):
                                 sql_string += f" ({pv_system['id']}, {inverter_counter + 1}, {tracker_counter}, 'tr01', "
                                 sql_string += f"{time_string_insert},{data_point},'{datetime_now}')"
                                 cur_insert.execute(sql_string)
+                                if count % 1000 == 0:
+                                    print(f"Insertions: {count}")
+                                count += 1
                             except Exception as e:
                                 print(f"Error: db_check1 {e}")
                         else: # update

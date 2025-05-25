@@ -201,7 +201,7 @@ def js_basevars(path, id=1):
                         pv_system['inverters'][-1]['trackers'] = list(map(int, values))
                 if re_is_temp.search(line): #r"^var\s+isTemp\s*=\s*true\s*$"
                     pv_system['has_temperature'] = 1
-            print(pv_system, file=sys.stderr)
+            # print(pv_system, file=sys.stderr)
             return pv_system
     else:
         print("Error: File path not found: %s" % path, file=sys.stderr)
