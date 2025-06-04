@@ -61,7 +61,7 @@ if __name__ == "__main__":
                [filter.production], output.pickle_write, id=8)
     if True:
         range_urstrom_all(config.path_base,
-                          "2024-01-01", "2024-01-06", [filter.production, filter.deduplicate_zeros, filter.time_filter],
+                          "2024-01-01", "2024-01-06", [filter.production, filter.deduplicate_zeros],
                           output_db.db_check)
     if False:
         range_urstrom_all(config.path_base,

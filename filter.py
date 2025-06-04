@@ -69,6 +69,7 @@ def deduplicate_zeros(input_table, pv_system = None):
     skip_mode = 0  # if skip_mode == 1, then are we in a region where we are skipping, because all values are zeros
     last_line_inserted = -1  # pointer to avoid inserting a line twice
     # skip first line, it is the header line
+    # input_table.sort(key=lambda row: row[0])
     for i in range(len(input_table)):
         # line is empty, skip
         if input_table[i] is None or len(input_table[i]) == 0:
@@ -77,9 +78,12 @@ def deduplicate_zeros(input_table, pv_system = None):
         this_line_is_nonzero = 0
         # we know that the date is non-zero, hence we skip it, and start with field number 1
         for j in range(1, len(input_table[i])):
-            for k in input_table[i][j]: # iterate through inverters
-                if input_table[i][j][k] != 0:
-                    this_line_is_nonzero = 1
+            if input_table[i][j]['ac'] != 0:
+                this_line_is_nonzero = 1
+            if input_table[i][j]['dc'] is not None:
+                for k in range(len(input_table[i][j]['dc'])): # iterate through trackers
+                    if input_table[i][j]['dc'][k] != 0:
+                        this_line_is_nonzero = 1
         # first and last line, always accept and continue
         if i == len(input_table) - 1 or i == 0:
             result.append(input_table[i])
@@ -93,7 +97,8 @@ def deduplicate_zeros(input_table, pv_system = None):
             if this_line_is_nonzero == 0:
                 skip_mode = 1  # enter skip mode
                 last_line_inserted = i
-        else:  # We are in skip mode, only accept if we found a line that is nonzero or a line following and empty line or a time delta that is not 300 seconds, but then we may have also to accept its predecessor.
+        else:  # We are in skip mode, only accept if we found a line that is nonzero or a line following and empty line
+               # or a time delta that is not 300 seconds, but then we may have also to accept its predecessor.
             if this_line_is_nonzero == 1 or len(input_table[i - 1]) == 0 or 300 != (
                     input_table[i - 1][0] - input_table[i][0]).seconds:
                 if i > last_line_inserted + 1:  # last line (zeros) has not been inserted yet
