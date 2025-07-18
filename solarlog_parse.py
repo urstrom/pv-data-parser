@@ -244,10 +244,16 @@ def js_data(path, pv_system, encoding='utf-8'):
                             inverter_output['dc'] = []
                             for _ in range(nr_trackers):
                                 inverter_output['dc'].append(int(inverter_input.pop(0)))
-                            inverter_output['sum'] = int(inverter_input.pop(0))
+                            try:
+                                inverter_output['sum'] = int(inverter_input.pop(0))
+                            except Exception as e:
+                                print(f"{path}: {e}")
                             inverter_output['voltage'] = []
-                            for _ in range(nr_trackers):
-                                inverter_output['voltage'].append(int(inverter_input.pop(0)))
+                            try:
+                                for _ in range(nr_trackers):
+                                    inverter_output['voltage'].append(int(inverter_input.pop(0)))
+                            except Exception as e:
+                                print(f"{path}: {e}")
                             inverter_output['temperature'] = 0 # skip for data protection data.pop(0)
                         else: # is not a production counter, just insert 0ed data for data protection
                             inverter_output = {'ac':0, 'dc':[0,0]}

@@ -10,18 +10,21 @@ def production(array_in, pv_system):
     for line_in in array_in:
         line_out = [line_in.pop(0)] # timestamp
         for inverter_counter in range(len(pv_system['inverters'])):
-            if inverter_counter in production_indices:
-                line_out.append(line_in[inverter_counter])
-            else: # a consumption counter, filter it out
-                field_out = {}
-                for key in line_in[inverter_counter]:
-                    if isinstance(line_in[inverter_counter][key], int):
-                        field_out[key] = 0
-                    else: # is list
-                        field_out[key] = []
-                        for field in line_in[inverter_counter][key]:
-                            field_out[key].append(0)
-                line_out.append(field_out)
+            try:
+                if inverter_counter in production_indices:
+                    line_out.append(line_in[inverter_counter])
+                else: # a consumption counter, filter it out
+                    field_out = {}
+                    for key in line_in[inverter_counter]:
+                        if isinstance(line_in[inverter_counter][key], int):
+                            field_out[key] = 0
+                        else: # is list
+                            field_out[key] = []
+                            for field in line_in[inverter_counter][key]:
+                                field_out[key].append(0)
+                    line_out.append(field_out)
+            except Exception as e:
+                print(f"{e}{line_in}")
             inverter_counter += 1
         array_out.append(line_out)
     return array_out

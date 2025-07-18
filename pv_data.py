@@ -27,9 +27,11 @@ def date_range(path, date_begin, date_end, parse_function, filter_functions, out
 def unpickle(path, pv_system):
     dirname = os.path.dirname(path)
     filename = pathlib.Path(path).stem
-    with open(os.path.join(dirname, "p", filename + ".pickle"), "rb") as file:
-        return pickle.load(file)
-
+    try:
+        with open(os.path.join(dirname, "p", filename + ".pickle"), "rb") as file:
+            return pickle.load(file)
+    except:
+        pass
 def range_urstrom_one(path, date_begin, date_end, filter_functions, output_function,
                pv_system_id):
     encoding = "utf-8"
@@ -55,20 +57,20 @@ def range_urstrom_all(root, date_begin, date_end, filter_functions, output_funct
 
 
 if __name__ == "__main__":
+    if True: # on server
+        date_range(f"{config.path_base}/04", "2023-01-01", "2025-07-07", unpickle, [filter.production, filter.deduplicate_zeros], output_db.db_check, id=4)
     if False:
         date_range(f"{config.path_base}/08", "2024-01-01", "2025-05-23",
                solarlog_parse.js_data,
                [filter.production], output.pickle_write, id=8)
-    if True:
+    if False:
         range_urstrom_all(config.path_base,
-                          "2024-01-01", "2024-01-06", [filter.production, filter.deduplicate_zeros],
+                          "2024-01-04", "2024-05-23", [filter.production, filter.deduplicate_zeros, filter.time_filter],
                           output_db.db_check)
     if False:
         range_urstrom_all(config.path_base,
                           "2024-01-05", "2024-01-06", [filter.production, filter.deduplicate_zeros],
                           output.pickle_write)
-    if False: # on server
-        date_range(f"{config.path_base}/13", "2020-01-01", "2024-12-31", unpickle, [], output_db.db_check, id=13)
     if False:
         date_range("/home/hbl/u/comp/hint/fs/web/monitoring/anlagen/13", "2016-03-01", "2025-04-01", solarlog_parse.csv_data,
                            [filter.production], output.pickle_write, format="csv", id=8)
