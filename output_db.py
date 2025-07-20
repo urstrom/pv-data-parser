@@ -55,12 +55,11 @@ def db_check(data, pv_system):
                         tracker_counter += 1
                     inverter_counter += 1
         sql_string = sql_string[:-1] + " on conflict (system_id, inverter_id, tracker_id, measurement_time) "
-        sql_string += "do update set measurement_time = excluded.measurement_time and yield = excluded.yield"
+        sql_string += "do update set measurement_time = excluded.measurement_time, yield = excluded.yield;"
         cur.execute(sql_string)
         con.commit()
         con.close()
     except Exception as e:
-        raise
         traceback.print_exc()
         print(f"Error: {e} at {pv_system['id']} and {time_string}")
 
