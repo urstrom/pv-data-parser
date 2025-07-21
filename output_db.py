@@ -36,7 +36,8 @@ def db_check(data, pv_system):
         # mapping = pv_system.get_mapping()
         header = data.pop(0) # header string
         sql_string = f"insert into solarlog_5min (system_id, inverter_id, tracker_id, tracker_id_text, measurement_time, "
-        sql_string += f"tz_offset, yield, insertion_time) values"
+        sql_string += f"tz_offset, yield, insertion_time) values "
+        insert_count = 0
         for line in data:
             datetime_now = datetime.datetime.now()
             measurement_time = line.pop(0)
@@ -52,16 +53,20 @@ def db_check(data, pv_system):
                             data_point = line[inverter_candidate_counter]['dc'][tracker_counter - 1]  # -1: the first is used for ac
                         sql_string += f" ({pv_system['id']}, {inverter_candidate_counter + 1}, {tracker_counter}, '', "
                         sql_string += f"{time_string_insert},{data_point},'{datetime_now}'),"
+                        insert_count += 1
                         tracker_counter += 1
                     inverter_counter += 1
+        if insert_count == 0:
+            return
         sql_string = sql_string[:-1] + " on conflict (system_id, inverter_id, tracker_id, measurement_time) "
         sql_string += "do update set measurement_time = excluded.measurement_time, yield = excluded.yield;"
         cur.execute(sql_string)
         con.commit()
         con.close()
+        print(f"PV system {pv_system['id']}: Inserted {insert_count} values")
     except Exception as e:
         traceback.print_exc()
-        print(f"Error: {e} at {pv_system['id']} and {time_string}")
+        print(f"Error: {e} at {pv_system['id']}")
 
 def db_check_bulk(data, pv_system, cur):
     mapping = pv_system.get_mapping()
