@@ -87,4 +87,12 @@ CREATE TABLE public.tracker (
 
 # TYPICAL USAGE
 
+# Tracker masks
+
+A tracker mask can be defined in config to select only certain trackers per inverter in case your CSV has empty columns for some system. The following tracker mask makes the program ignore the odd values for the first and second inverter of system 20.
+```
+tracker_mask = {20: ((0,2,4,6),(0,2,4,6),(0,1,2,3,4,5,6,7,8,9,10,11),(0,1,2,3,4,5,6,7,8,9,10,11))}
+```
+
+
 Convert this 
