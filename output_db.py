@@ -1,4 +1,4 @@
-import output, datetime, traceback
+import output, datetime, traceback, sys
 
 def db_write(data, pv_system):
     global cur
@@ -47,14 +47,19 @@ def db_check(data, pv_system):
                 inverter_counter = 0
                 if pv_system['inverters'][inverter_candidate_counter]['is_production'] == 1:
                     for tracker_counter in range(pv_system['inverters'][inverter_candidate_counter]['nr_trackers'] + 1): # +1: accomodate ac value
-                        if tracker_counter == 0:
-                            data_point = line[inverter_candidate_counter]['ac']
-                        else:
-                            data_point = line[inverter_candidate_counter]['dc'][tracker_counter - 1]  # -1: the first is used for ac
-                        sql_string += f" ({pv_system['id']}, {inverter_candidate_counter + 1}, {tracker_counter}, '', "
-                        sql_string += f"{time_string_insert},{data_point},'{datetime_now}'),"
-                        insert_count += 1
-                        tracker_counter += 1
+                        try:
+                            if tracker_counter == 0:
+                                data_point = line[inverter_candidate_counter]['ac']
+                            else:
+                                dc = line[inverter_candidate_counter]
+                                data_point = dc['dc'][tracker_counter - 1]  # -1: the first is used for ac
+                            sql_string += f" ({pv_system['id']}, {inverter_candidate_counter + 1}, {tracker_counter}, '', "
+                            sql_string += f"{time_string_insert},{data_point},'{datetime_now}'),"
+                            insert_count += 1
+                            tracker_counter += 1
+                        except Exception as e:
+                            traceback.print_exc()
+                            print(f"Error: {e} at {pv_system['id']} icc {inverter_candidate_counter} tc {tracker_counter} ", file=sys.stderr)
                     inverter_counter += 1
         if insert_count == 0:
             return
