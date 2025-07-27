@@ -1,6 +1,8 @@
 import sys, datetime
 
 def production(array_in, pv_system):
+    if pv_system is None:
+        return []
     array_out = [array_in.pop(0)] # header
     production_indices = [index for index, dictionary in enumerate(pv_system['inverters']) if
                           dictionary.get('is_production') == 1]
