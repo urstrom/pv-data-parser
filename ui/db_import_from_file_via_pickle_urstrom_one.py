@@ -7,11 +7,9 @@ def db_import_from_file_via_pickle_urstrom_one(pv_system_id, date_begin, date_en
     # no Solarlog data at UrStrom
     if pv_system_id == 2 or pv_system_id == 3 or (pv_system_id > 22 and pv_system_id < 31):
         return
-    # if pv_system != 14:
-    #   return
     parse_format = "js"
     # CSV data
-    if pv_system_id == 13 or pv_system_id == 16 or pv_system_id == 17 or pv_system_id == 19 or pv_system_id == 20:
+    if pv_system_id in (13, 14, 16, 17, 18, 20, 21, 22):
         parse_format = "csv"
     # CSV data, format 1.0, ISO-8859-1
     # HBL if pv_system == 16 or pv_system == 17:
