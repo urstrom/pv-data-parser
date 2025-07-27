@@ -8,10 +8,14 @@ def date_range(path, date_begin, date_end, parse_function, filter_functions, out
     path: files with data
     date_begin: date to begin with
     date_end: date to end with"""
-    if not os.path.exists (os.path.abspath(path)):
+    if not os.path.exists(os.path.abspath(path)):
         print(f"Path does not exist: {path}", file = sys.stderr)
         return
-    pv_system = solarlog_parse.js_basevars(os.path.join(path, "base_vars.js"), id)
+    basevars_path = os.path.join(path, "base_vars.js")
+    if not os.path.exists(basevars_path):
+        print(f"Base_vars does not exist: {basevars_path}", file = sys.stderr)
+        return
+    pv_system = solarlog_parse.js_basevars(basevars_path, id)
     date_begin = datetime.datetime.strptime(date_begin, "%Y-%m-%d")
     date_end = datetime.datetime.strptime(date_end, "%Y-%m-%d")
     delta = date_end - date_begin
