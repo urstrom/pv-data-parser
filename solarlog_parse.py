@@ -2,6 +2,9 @@
 
 import re, datetime, sys, os, pytz, csv, output_db, pickle
 
+import config
+
+
 # Parse solarlog min*.js files
 # ' https://www.photonensammler.de/wiki/doku.php?id=solarlog_datenformat'
 
@@ -118,7 +121,7 @@ def csv_data_line(parts, offsets, pv_system):
                   file=sys.stderr)
             return []
 
-        if len(offsets[inverter_counter]['dc']) != pv_system['inverters'][inverter_counter]['nr_trackers']:
+        if len(offsets[inverter_counter]['dc']) != pv_system['inverters'][inverter_counter]['nr_trackers'] and 'tracker_mask' not in pv_system:
             print(f"Parse error csv_data_line pv_system id: {pv_system['id']} path: {pv_system['path']}, inverter {inverter_counter}, {timestamp}: "
                   f"tracker offsets {len(offsets[inverter_counter]['dc'])} != pv_trackers_no "
                   f"{pv_system['inverters'][inverter_counter]['nr_trackers']}", file=sys.stderr)
@@ -127,7 +130,11 @@ def csv_data_line(parts, offsets, pv_system):
         inverter['dc'] = []
         for i in range(0, len(offsets[inverter_counter]['dc'])):
             if good_value(parts[offsets[inverter_counter]['dc'][i]], str(parts)):
-                inverter['dc'].append(int(parts[offsets[inverter_counter]['dc'][i]]))
+                if 'tracker_mask' not in pv_system:
+                    inverter['dc'].append(int(parts[offsets[inverter_counter]['dc'][i]]))
+                else:
+                    if i in pv_system['tracker_mask'][inverter_counter]:
+                        inverter['dc'].append(int(parts[offsets[inverter_counter]['dc'][i]]))
             else:
                 print(f"Parse error cvs_data_line id: {pv_system['id']} path: {pv_system['path']} {timestamp}: bad value", file=sys.stderr)
                 return []
@@ -201,6 +208,12 @@ def js_basevars(path, id=1):
                         pv_system['inverters'][-1]['trackers'] = list(map(int, values))
                 if re_is_temp.search(line): #r"^var\s+isTemp\s*=\s*true\s*$"
                     pv_system['has_temperature'] = 1
+
+            try:
+                if pv_system['id'] in config.tracker_mask:
+                    print("Applying tracker_mask for this system")
+                    pv_system['tracker_mask'] = config.tracker_mask[pv_system['id']]
+            except NameError: pass
             # print(pv_system, file=sys.stderr)
             return pv_system
     else:
