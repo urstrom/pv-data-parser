@@ -103,9 +103,10 @@ def deduplicate_zeros(input_table, pv_system = None):
                 skip_mode = 1  # enter skip mode
                 last_line_inserted = i
         else:  # We are in skip mode, only accept if we found a line that is nonzero or a line following and empty line
-               # or a time delta that is not 300 seconds, but then we may have also to accept its predecessor.
-            if this_line_is_nonzero == 1 or len(input_table[i - 1]) == 0 or 300 != (
-                    input_table[i - 1][0] - input_table[i][0]).seconds:
+               # or a time delta that is not 300 seconds absolute, but then we may have also to accept its predecessor.
+            time_difference = (input_table[i - 1][0] - input_table[i][0]).total_seconds()
+            # 300 is five minutes after, -300 is five minutes earlier
+            if this_line_is_nonzero == 1 or len(input_table[i - 1]) == 0 or abs(time_difference) != 300:
                 if i > last_line_inserted + 1:  # last line (zeros) has not been inserted yet
                     result.append(input_table[i - 1])  # so let's insert it
                 result.append(input_table[i])
