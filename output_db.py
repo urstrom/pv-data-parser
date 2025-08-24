@@ -68,7 +68,7 @@ def db_check(data, pv_system):
         cur.execute(sql_string)
         con.commit()
         con.close()
-        print(f"PV system {pv_system['id']}: Inserted {insert_count} values")
+        print(f"PV system {pv_system['id']}: Inserted {insert_count} values", file=sys.stderr)
     except Exception as e:
         traceback.print_exc()
         print(f"Error: {e} at {pv_system['id']}")
