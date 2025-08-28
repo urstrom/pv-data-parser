@@ -5,7 +5,7 @@ import db_import_from_file_via_pickle
 def db_import_from_file_via_pickle_urstrom_one(pv_system_id, date_begin, date_end):
     encoding = "utf-8"
     # no Solarlog data at UrStrom
-    if pv_system_id == 2 or pv_system_id == 3 or (pv_system_id > 22 and pv_system_id < 31):
+    if pv_system_id in [2,3,23,24,25,26,28,29,30]:
         return
     parse_format = "js"
     # CSV data

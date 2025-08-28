@@ -68,7 +68,7 @@ def db_check(data, pv_system):
         cur.execute(sql_string)
         con.commit()
         con.close()
-        print(f"PV system {pv_system['id']}: Inserted {insert_count} values", file=sys.stderr)
+        print(f"PV system {pv_system['id']}: Inserting {insert_count} rows, inserted {cur.rowcount} rows", file=sys.stderr)
     except Exception as e:
         traceback.print_exc()
         print(f"Error: {e} at {pv_system['id']}")
@@ -102,6 +102,7 @@ def db_refresh_solarlog_day():
     import psycopg2
     con = psycopg2.connect(f"dbname={config.database_name} user={config.database_user}")
     cur = con.cursor()
+    cur.execute("refresh materialized view solarlog_5min_text;")
     cur.execute("refresh materialized view solarlog_day;")
     cur.execute("refresh materialized view solarlog_5min_w_per_kwp;")
     cur.execute("refresh materialized view solarlog_5min_w_per_kwp_inv;")
