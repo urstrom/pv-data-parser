@@ -49,18 +49,19 @@ This is a dictionary with the following keys:
 
 Database format (PostgreSQL):
 
-tracker_id != 0 is tracker_id DC, tracker_id = 0 is inverter_id AC
+* tracker_id != 0 is tracker_id DC, tracker_id = 0 is inverter_id AC
+* inverter_id_recorded: can be used to track old recorded inverter IDs in the event of inverter reordering
 
 ```
 CREATE TABLE public.solarlog_5min (
     system_id integer DEFAULT 18 NOT NULL,
-    tracker_id_text character varying(8) NOT NULL,
     measurement_time timestamp without time zone NOT NULL,
     tz_offset integer,
     yield integer, 
     insertion_time timestamp without time zone,
     inverter_id integer NOT NULL,
     tracker_id integer NOT NULL,
+    inverter_id_recorded integer NOT NULL,
 );
 CREATE TABLE public.tracker (
     tracker_id_str character varying(20) NOT NULL,
@@ -94,6 +95,3 @@ A tracker mask can be defined in config to select only certain trackers per inve
 ```
 tracker_mask = {20: ((0,2,4,6),(0,2,4,6),(0,1,2,3,4,5,6,7,8,9,10,11),(0,1,2,3,4,5,6,7,8,9,10,11))}
 ```
-
-
-Convert this 
