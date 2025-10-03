@@ -1,6 +1,5 @@
 import sys, os, datetime, pickle, pathlib
-import config
-import solarlog_parse, output_db, output, filter
+import config, solarlog_parse, output_db, output, filter
 
 def date_range(path, date_begin, date_end, parse_function, filter_functions, output_function,
                encoding="utf-8", id=1):
@@ -29,13 +28,14 @@ def date_range(path, date_begin, date_end, parse_function, filter_functions, out
             output_function(data, pv_system)
 
 def unpickle(path, pv_system):
-    dirname = os.path.dirname(path)
+    dirname = os.path.join(config.path_data_raw, "pickle", ("%02d" % pv_system['id']))
     filename = pathlib.Path(path).stem
     try:
-        with open(os.path.join(dirname, "p", filename + ".pickle"), "rb") as file:
+        with open(os.path.join(dirname, filename + ".pickle"), "rb") as file:
             return pickle.load(file)
     except:
         pass
+
 def range_urstrom_one(path, date_begin, date_end, filter_functions, output_function,
                pv_system_id):
     encoding = "utf-8"
@@ -61,7 +61,7 @@ def range_urstrom_all(root, date_begin, date_end, filter_functions, output_funct
 
 
 if __name__ == "__main__":
-    if True: # on server
+    if False: # on server
         date_range(f"{config.path_base}/04", "2023-01-01", "2025-07-07", unpickle, [filter.production, filter.deduplicate_zeros], output_db.db_check, id=4)
     if False:
         date_range(f"{config.path_base}/08", "2024-01-01", "2025-05-23",

@@ -18,8 +18,8 @@ Maintainer: holger.blasum@urstrom.de
 ## DDF: Day data format: Used between solarlog_parse/filter/output*
 
 This is an array of data rows, characterized as follows: 
-* the first data row contains the header, which is a dictionary
-	* version: Version of the header 
+* the first data row contains the header, which is a dictionary to represent properties of the original file
+	* version: Solar-Log export format version
 	* path: path information
 	* line1: original line1 of day yield file
 	* line2: original line2 of day yield file
@@ -33,6 +33,7 @@ This is an array of data rows, characterized as follows:
 ## PV system representation: pv_system
 
 This is a dictionary with the following keys:
+* id: ID of the PV system
 * row_length: length of CSV row
 * inverters: list of inverters, each inverter has the keys: 
 	* name: name of inverter
