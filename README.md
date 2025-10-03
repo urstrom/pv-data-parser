@@ -103,6 +103,7 @@ If the database server is different from the server collecting solarlog files, o
 
 # Archiving configuration changes (basevars.js)  
 
-This is not directly part of this pv-data-parser.py, but can (e.g.) be achieved with git by ```
+This is not directly part of this pv-data-parser.py, but can (e.g.) be achieved with git by
+```
 (cd /your/home/data/directory && (for i in `seq -w 1 31` ; do git add ${i}/base_vars.js ; done) && git commit -m'Archive base_vars')
 ```
