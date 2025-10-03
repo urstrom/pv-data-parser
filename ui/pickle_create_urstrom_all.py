@@ -6,8 +6,9 @@ def pickle_create_urstrom_all(date_begin, date_end):
     for pv_system_id in range(1, urstrom.get_number_systems() + 1):
 
         parse_function = urstrom.get_parse_function(pv_system_id, date_begin, date_end)
-        pickle_create.pickle_create(
-            pv_system_id, date_begin, date_end, parse_function)
+        if parse_function is not None:
+            pickle_create.pickle_create(
+                pv_system_id, date_begin, date_end, parse_function)
 
         # pickle_create.pickle_create(pv_system_id, date_begin, date_end, parse_format)
 
