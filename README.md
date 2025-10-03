@@ -11,6 +11,7 @@ Maintainer: holger.blasum@urstrom.de
 * output.py: Output functions (generic/stdout/file).
 * output_db.py: Output functions to database.
 * test/*: Python unit tests.
+* ui/*: Interfaces directly called by the user.
 
 
 # Data exchange interfaces
@@ -87,11 +88,21 @@ CREATE TABLE public.tracker (
 
 ```
 
-# TYPICAL USAGE
+# WAYS OF USAGE
 
 # Tracker masks
 
 A tracker mask can be defined in config to select only certain trackers per inverter in case your CSV has empty columns for some system. The following tracker mask makes the program ignore the odd values for the first and second inverter of system 20.
 ```
 tracker_mask = {20: ((0,2,4,6),(0,2,4,6),(0,1,2,3,4,5,6,7,8,9,10,11),(0,1,2,3,4,5,6,7,8,9,10,11))}
+```
+
+# Pickling files
+
+If the database server is different from the server collecting solarlog files, optionally, in a two-step process, parsed files can be exported to Python pickle files, which then can be copied to another server hosting the database import.
+
+# Archiving configuration changes (basevars.js)  
+
+This is not directly part of this pv-data-parser.py, but can (e.g.) be achieved with git by ```
+(cd /your/home/data/directory && (for i in `seq -w 1 31` ; do git add ${i}/base_vars.js ; done) && git commit -m'Archive base_vars')
 ```
