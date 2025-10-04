@@ -86,10 +86,12 @@ This is not directly part of this pv-data-parser.py, but can (e.g.) be achieved 
 (cd /your/home/data/directory && (for i in `seq -w 1 31` ; do git add ${i}/base_vars.js ; done) && git commit -m'Archive base_vars')
 ```
 
-## Display with e.g. grafana
+## Display with e.g. Grafana
+
+In the database, create a materialized view:
 
 ```
-CREATE MATERIALIZED VIEW public.solarlog_5min_text AS
+CREATE MATERIALIZED VIEW solarlog_5min_text AS
  SELECT system_id,
     (((inverter_id)::text || '-'::text) || (tracker_id)::text) AS tracker_id_text,
     measurement_time,
@@ -98,10 +100,24 @@ CREATE MATERIALIZED VIEW public.solarlog_5min_text AS
     insertion_time,
     inverter_id,
     tracker_id
-   FROM public.solarlog_5min
+   FROM solarlog_5min
   WITH NO DATA;
+refresh materialized view solarlog_5min_text;
 ```
 
+Then display it with Grafana: 
+```
+SELECT
+  $__timeGroupAlias(measurement_time,$__interval),
+  avg(yield) AS "yield",
+  tracker_id_text
+FROM solarlog_5min_text
+WHERE
+  $__timeFilter(measurement_time) AND
+  system_id = $sysid
+GROUP BY 1, tracker_id_text
+ORDER BY 1
+```
 
 ## Display relative yields
 
@@ -133,7 +149,7 @@ ALTER TABLE tracker
     ADD PRIMARY KEY (system_id, inverter_id, tracker_id);
 ```
 
-Have a materialized view: 
+Have a materialized view linking both tables: 
 
 ```
 CREATE MATERIALIZED VIEW public.solarlog_5min_w_per_kwp AS
@@ -146,8 +162,23 @@ CREATE MATERIALIZED VIEW public.solarlog_5min_w_per_kwp AS
   WITH NO DATA;
 ```
 
-## Archiving updates
-It can be useful to log (automatic) corrections of recorded yields.
+Display it with Grafana: 
+```
+SELECT
+  $__timeGroupAlias(measurement_time,$__interval),
+  avg(w_per_kwp) AS "w_per_kwp",
+  tracker_tr
+FROM solarlog_5min_w_per_kwp
+WHERE
+  $__timeFilter(measurement_time) AND
+  system_id = $sysid 
+GROUP BY 1, tracker_tr
+ORDER BY 1
+```
+
+## Archiving updates of yields
+Sometimes Solar-Log corrects yields from the previous day.
+Thus, it can be useful to log (automatic) corrections of recorded yields.
 
 For this create an additional table recording the updates:
 ```
@@ -164,8 +195,7 @@ CREATE TABLE public.solarlog_5min_updates (
 
 ```
 
-And create a PostgreSQL trigger.
-
+And create a PostgreSQL trigger:
 ```
 CREATE FUNCTION public.log_solarlog_5min_updates() RETURNS trigger
     LANGUAGE plpgsql
@@ -178,6 +208,3 @@ RETURN NEW;
 END;
 $$;
 ```
-
-
-
