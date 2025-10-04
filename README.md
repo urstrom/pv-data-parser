@@ -160,7 +160,8 @@ CREATE MATERIALIZED VIEW solarlog_5min_w_per_kwp AS
     solarlog_5min.measurement_time,
     ((solarlog_5min.yield * 1000) / tracker.power) AS w_per_kwp
    FROM (solarlog_5min
-     LEFT JOIN tracker ON (((tracker.system_id = solarlog_5min.system_id) AND (tracker.inverter_id = solarlog_5min.inverter_id) AND tracker.inverter_id != 0 AND (tracker.tracker_id = solarlog_5min.tracker_id))))
+     LEFT JOIN tracker ON (((tracker.system_id = solarlog_5min.system_id) AND (tracker.inverter_id = solarlog_5min.inverter_id) AND (tracker.tracker_id = solarlog_5min.tracker_id))))
+    WHERE solarlog_5min.tracker_id != 0
   WITH NO DATA;
 refresh materialized view solarlog_5min_w_per_kwp;
 ```
