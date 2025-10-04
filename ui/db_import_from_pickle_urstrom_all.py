@@ -1,6 +1,5 @@
 import sys, os, datetime, pickle, pathlib
-import pv_data, config, solarlog_parse, filter, output, output_db, db_import_from_pickle,\
-    db_import_from_pickle, urstrom
+import pv_data, config, solarlog_parse, filter, output, output_db, db_import_from_pickle, urstrom
 
 def db_import_from_pickle_urstrom_all(date_begin, date_end):
     for pv_system_id in range(1, urstrom.get_number_systems() + 1):
