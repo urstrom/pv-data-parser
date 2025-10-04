@@ -55,7 +55,7 @@ Database format (PostgreSQL):
 * inverter_id_recorded: can be used to track old recorded inverter IDs in the event of inverter reordering
 
 ```
-CREATE TABLE public.solarlog_5min (
+CREATE TABLE solarlog_5min (
     system_id integer DEFAULT 18 NOT NULL,
     measurement_time timestamp without time zone NOT NULL,
     tz_offset integer,
@@ -126,7 +126,7 @@ ORDER BY 1
 Keep a database of tracker data, e.g.:
 
 ```
-CREATE TABLE public.tracker (
+CREATE TABLE tracker (
     tracker_id_str character varying(20) NOT NULL,
     inverter_id_str character varying(15) NOT NULL,
     tracker_shorthand character varying(10) NOT NULL,
@@ -154,13 +154,13 @@ ALTER TABLE tracker
 Have a materialized view linking both tables: 
 
 ```
-CREATE MATERIALIZED VIEW public.solarlog_5min_w_per_kwp AS
+CREATE MATERIALIZED VIEW solarlog_5min_w_per_kwp AS
  SELECT solarlog_5min.system_id,
     (((solarlog_5min.inverter_id)::text || '-'::text) || (solarlog_5min.tracker_id)::text) AS tracker_id_text,
     solarlog_5min.measurement_time,
     ((solarlog_5min.yield * 1000) / tracker.power) AS w_per_kwp
-   FROM (public.solarlog_5min
-     LEFT JOIN public.tracker ON (((tracker.system_id = solarlog_5min.system_id) AND (tracker.inverter_id = solarlog_5min.inverter_id) AND (tracker.tracker_id = solarlog_5min.tracker_id))))
+   FROM (solarlog_5min
+     LEFT JOIN tracker ON (((tracker.system_id = solarlog_5min.system_id) AND (tracker.inverter_id = solarlog_5min.inverter_id) AND tracker.inverter_id != 0 AND (tracker.tracker_id = solarlog_5min.tracker_id))))
   WITH NO DATA;
 refresh materialized view solarlog_5min_w_per_kwp;
 ```
@@ -170,12 +170,12 @@ Display it with Grafana:
 SELECT
   $__timeGroupAlias(measurement_time,$__interval),
   avg(w_per_kwp) AS "w_per_kwp",
-  tracker_tr
+  tracker_id_text
 FROM solarlog_5min_w_per_kwp
 WHERE
   $__timeFilter(measurement_time) AND
   system_id = $sysid 
-GROUP BY 1, tracker_tr
+GROUP BY 1, tracker_id_text
 ORDER BY 1
 ```
 
@@ -185,7 +185,7 @@ Thus, it can be useful to log (automatic) corrections of recorded yields.
 
 For this create an additional table recording the updates:
 ```
-CREATE TABLE public.solarlog_5min_updates (
+CREATE TABLE solarlog_5min_updates (
     system_id integer,
     measurement_time timestamp without time zone,
     tz_offset integer,
@@ -200,7 +200,7 @@ CREATE TABLE public.solarlog_5min_updates (
 
 And create a PostgreSQL trigger:
 ```
-CREATE FUNCTION public.log_solarlog_5min_updates() RETURNS trigger
+CREATE FUNCTION log_solarlog_5min_updates() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
