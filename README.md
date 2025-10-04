@@ -1,8 +1,10 @@
-Data parser for PV data (currently supports Solar-Log)
+Data parser for PV data (currently supports Solar-Log).
 
 Maintainer: holger.blasum@urstrom.de
 
-# Files
+# Entry point and files
+
+The central function "data_range" (pv_data.py) function takes a filesystem path to Solar-Log data, a beginning and end date, and on the files specified by these parameters executes the specified parse function (e.g. parsing CSV or JS), (optional) filter functions (e.g. to select only production values, but not consumption values) and output functions (e.g. to database or Python pickle format). The user interface (with some example combinations) are functions in the ui folder.
 
 * pv_data.py: main control module
 * config.py: Configuration file (password etc)
@@ -16,7 +18,7 @@ Maintainer: holger.blasum@urstrom.de
 
 # Data exchange interfaces
 
-## DDF: Day data format: Used between solarlog_parse/filter/output*
+## DDF: Day data format: Used for data exchange between functions solarlog_parse/filter/output*
 
 This is an array of data rows, characterized as follows: 
 * the first data row contains the header, which is a dictionary to represent properties of the original file
