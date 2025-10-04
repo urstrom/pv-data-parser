@@ -162,6 +162,7 @@ CREATE MATERIALIZED VIEW public.solarlog_5min_w_per_kwp AS
    FROM (public.solarlog_5min
      LEFT JOIN public.tracker ON (((tracker.system_id = solarlog_5min.system_id) AND (tracker.inverter_id = solarlog_5min.inverter_id) AND (tracker.tracker_id = solarlog_5min.tracker_id))))
   WITH NO DATA;
+refresh materialized view solarlog_5min_w_per_kwp;
 ```
 
 Display it with Grafana: 
