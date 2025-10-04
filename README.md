@@ -45,7 +45,6 @@ This is a dictionary with the following keys:
 * has_temperature: does the PV system store temperature data
 
 
-
 # Database format 
 
 Database format (PostgreSQL):
@@ -64,6 +63,51 @@ CREATE TABLE public.solarlog_5min (
     tracker_id integer NOT NULL,
     inverter_id_recorded integer NOT NULL,
 );
+ALTER TABLE solarlog_5min ADD PRIMARY KEY (system_id, inverter_id, tracker_id, measurement_time);
+```
+
+# POSSIBLE WAYS OF USAGE
+
+## Tracker masks
+
+A tracker mask can be defined in config to select only certain trackers per inverter in case your CSV has empty columns for some particular PV system. The following tracker mask makes the program ignore the odd values for the first and second inverter of system 20.
+```
+tracker_mask = {20: ((0,2,4,6),(0,2,4,6),(0,1,2,3,4,5,6,7,8,9,10,11),(0,1,2,3,4,5,6,7,8,9,10,11))}
+```
+
+## Pickling files
+
+If the database server is different from the server collecting solarlog files, optionally, in a two-step process, parsed files can be exported to Python pickle files, which then can be copied to another server hosting the database import.
+
+## Archiving Solar-Log configuration changes (basevars.js)  
+
+This is not directly part of this pv-data-parser.py, but can (e.g.) be achieved with git by
+```
+(cd /your/home/data/directory && (for i in `seq -w 1 31` ; do git add ${i}/base_vars.js ; done) && git commit -m'Archive base_vars')
+```
+
+## Display with e.g. grafana
+
+```
+CREATE MATERIALIZED VIEW public.solarlog_5min_text AS
+ SELECT system_id,
+    (((inverter_id)::text || '-'::text) || (tracker_id)::text) AS tracker_id_text,
+    measurement_time,
+    tz_offset,
+    yield,
+    insertion_time,
+    inverter_id,
+    tracker_id
+   FROM public.solarlog_5min
+  WITH NO DATA;
+```
+
+
+## Display relative yields
+
+Keep a database of tracker data, e.g.:
+
+```
 CREATE TABLE public.tracker (
     tracker_id_str character varying(20) NOT NULL,
     inverter_id_str character varying(15) NOT NULL,
@@ -85,25 +129,55 @@ CREATE TABLE public.tracker (
     tracker_id_global integer,
     tracker_tr character varying
 );
+ALTER TABLE tracker
+    ADD PRIMARY KEY (system_id, inverter_id, tracker_id);
+```
+
+Have a materialized view: 
+
+```
+CREATE MATERIALIZED VIEW public.solarlog_5min_w_per_kwp AS
+ SELECT solarlog_5min.system_id,
+    (((solarlog_5min.inverter_id)::text || '-'::text) || (solarlog_5min.tracker_id)::text) AS tracker_id_text,
+    solarlog_5min.measurement_time,
+    ((solarlog_5min.yield * 1000) / tracker.power) AS w_per_kwp
+   FROM (public.solarlog_5min
+     LEFT JOIN public.tracker ON (((tracker.system_id = solarlog_5min.system_id) AND (tracker.inverter_id = solarlog_5min.inverter_id) AND (tracker.tracker_id = solarlog_5min.tracker_id))))
+  WITH NO DATA;
+```
+
+## Archiving updates
+It can be useful to log (automatic) corrections of recorded yields.
+
+For this create an additional table recording the updates:
+```
+CREATE TABLE public.solarlog_5min_updates (
+    system_id integer,
+    measurement_time timestamp without time zone,
+    tz_offset integer,
+    yield integer,
+    insertion_time timestamp without time zone,
+    inverter_id integer,
+    tracker_id integer,
+    inverter_id_recorded integer
+);
 
 ```
 
-# WAYS OF USAGE
+And create a PostgreSQL trigger.
 
-# Tracker masks
-
-A tracker mask can be defined in config to select only certain trackers per inverter in case your CSV has empty columns for some system. The following tracker mask makes the program ignore the odd values for the first and second inverter of system 20.
 ```
-tracker_mask = {20: ((0,2,4,6),(0,2,4,6),(0,1,2,3,4,5,6,7,8,9,10,11),(0,1,2,3,4,5,6,7,8,9,10,11))}
+CREATE FUNCTION public.log_solarlog_5min_updates() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+IF NEW.yield IS DISTINCT FROM OLD.yield THEN
+INSERT INTO solarlog_5min_updates (system_id, inverter_id, inverter_id_recorded, tracker_id, measurement_time, tz_offset, yield, insertion_time) VALUES ( OLD.system_id, OLD.inverter_id, OLD.inverter_id_recorded, OLD.tracker_id, OLD.measurement_time, OLD.tz_offset, OLD.yield, OLD.insertion_time  );
+END IF;
+RETURN NEW;
+END;
+$$;
 ```
 
-# Pickling files
 
-If the database server is different from the server collecting solarlog files, optionally, in a two-step process, parsed files can be exported to Python pickle files, which then can be copied to another server hosting the database import.
 
-# Archiving configuration changes (basevars.js)  
-
-This is not directly part of this pv-data-parser.py, but can (e.g.) be achieved with git by
-```
-(cd /your/home/data/directory && (for i in `seq -w 1 31` ; do git add ${i}/base_vars.js ; done) && git commit -m'Archive base_vars')
-```
