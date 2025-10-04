@@ -10,3 +10,4 @@ def db_import_from_pickle_urstrom_all(date_begin, date_end):
 
 if __name__ == "__main__":
     db_import_from_pickle_urstrom_all(sys.argv[1], sys.argv[2])
+    output_db.db_refresh_materialized_views()

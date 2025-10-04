@@ -97,15 +97,15 @@ def db_check_bulk(data, pv_system, cur):
 
 
 
-def db_refresh_solarlog_day():
+def db_refresh_materialized_views():
     import config
     import psycopg2
     con = psycopg2.connect(f"dbname={config.database_name} user={config.database_user}")
     cur = con.cursor()
     cur.execute("refresh materialized view solarlog_5min_text;")
-    cur.execute("refresh materialized view solarlog_day;")
+    # cur.execute("refresh materialized view solarlog_day;")
     cur.execute("refresh materialized view solarlog_5min_w_per_kwp;")
-    cur.execute("refresh materialized view solarlog_5min_w_per_kwp_inv;")
+    # cur.execute("refresh materialized view solarlog_5min_w_per_kwp_inv;")
     print("refreshing materialized view solarlog_day", file=sys.stderr)
     con.commit()
     con.close()
