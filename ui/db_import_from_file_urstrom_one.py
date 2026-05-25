@@ -14,7 +14,7 @@ def db_import_from_file_urstrom_one(pv_system_id, date_begin, date_end):
     # CSV data, format 1.0, ISO-8859-1
     # HBL if pv_system == 16 or pv_system == 17:
     #    encoding = "iso-8859-1"
-    db_import_from_file.db_import_from_file(pv_system_id, date_begin, date_end, parse_format)
+    db_import_from_file.db_import_from_file(pv_system_id, f"{config.path_data_raw}{pv_system_id:02}", date_begin, date_end, parse_format)
 
 if __name__ == "__main__":
     db_import_from_file_urstrom_one(int(sys.argv[1]), sys.argv[2], sys.argv[3])
