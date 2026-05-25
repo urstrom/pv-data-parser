@@ -30,9 +30,6 @@ def db_check(data, pv_system):
     import config
     import psycopg2
     try:
-        con = psycopg2.connect(
-            f"dbname={config.database_name} user={config.database_user} host={config.database_host} password={config.database_password}")
-        cur = con.cursor()
         # mapping = pv_system.get_mapping()
         header = data.pop(0) # header string
         sql_string = f"insert into solarlog_5min (system_id, inverter_id, inverter_id_recorded, tracker_id, measurement_time, "
@@ -65,10 +62,16 @@ def db_check(data, pv_system):
             return
         sql_string = sql_string[:-1] + " on conflict (system_id, inverter_id_recorded, tracker_id, measurement_time) "
         sql_string += "do update set measurement_time = excluded.measurement_time, yield = excluded.yield;"
-        cur.execute(sql_string)
-        con.commit()
-        con.close()
-        print(f"PV system {pv_system['id']}: Inserting {insert_count} rows, inserted {cur.rowcount} rows", file=sys.stderr)
+        if config.is_testing == 1:
+            print(sql_string, file = sys.stderr)
+        else:
+            con = psycopg2.connect(
+                f"dbname={config.database_name} user={config.database_user} host={config.database_host} password={config.database_password}")
+            cur = con.cursor()
+            cur.execute(sql_string)
+            con.commit()
+            con.close()
+            print(f"PV system {pv_system['id']}: Inserting {insert_count} rows, inserted {cur.rowcount} rows", file=sys.stderr)
     except Exception as e:
         traceback.print_exc()
         print(f"Error: {e} at {pv_system['id']}")

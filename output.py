@@ -1,15 +1,19 @@
-import sys, datetime, pickle, os, pathlib, config
+import sys, datetime, pickle, os, pathlib, config, traceback
 
 def data_print(data, pv_system):
     print(data, file=sys.stderr)
 
 def pickle_write(data, pv_system):
-    dirname = os.path.join(config.path_data_raw, "pickle", ("%02d" % pv_system['id']))
+    dirname = os.path.join(config.path_data_pickled, ("%02d" % pv_system['id']))
     filename = pathlib.Path(data[0]['path']).stem
     if not os.path.exists(dirname):
         os.mkdir(dirname)
-    with open(os.path.join(dirname, filename + ".pickle"), "wb") as file:
-        pickle.dump(data, file)
+    try:
+        with open(os.path.join(dirname, filename + ".pickle"), "wb") as file:
+            pickle.dump(data, file)
+    except Exception as e:
+        print(f"Exception as {e} {e.__traceback__}")
+
 
 def js_write(data, pv_system):
     header = data.pop(0)

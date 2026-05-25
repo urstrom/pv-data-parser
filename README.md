@@ -56,19 +56,31 @@ Database format (PostgreSQL):
 
 ```
 CREATE TABLE solarlog_5min (
-    system_id integer DEFAULT 18 NOT NULL,
+    system_id integer NOT NULL,
     measurement_time timestamp without time zone NOT NULL,
     tz_offset integer,
     yield integer, 
     insertion_time timestamp without time zone,
     inverter_id integer NOT NULL,
     tracker_id integer NOT NULL,
-    inverter_id_recorded integer NOT NULL,
+    inverter_id_recorded integer NOT NULL
 );
 ALTER TABLE solarlog_5min ADD PRIMARY KEY (system_id, inverter_id, tracker_id, measurement_time);
 ```
 
 # POSSIBLE WAYS OF USAGE
+
+## Daily run
+
+Check out git to $HOME/pv-data-parser
+
+Edit pv-data-parser/config.py
+
+mkdir pv-data-parser/log
+
+Run pv-data-parser/ui/daily.sh, this calls db_import_from_pickle_urstrom_all.py
+
+python3 ui/pickle_create_urstrom_all.py 2026-05-10 2026-05-11
 
 ## Tracker masks
 
@@ -212,3 +224,7 @@ RETURN NEW;
 END;
 $$;
 ```
+
+## Testing
+
+Folder test, file pv_data_test.py contains tests. First the description of the test is printed, followed by outputs to sys.stderr. These sys.stderr outputs may be intentional for inspection purposes.

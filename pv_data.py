@@ -1,8 +1,8 @@
 import sys, os, datetime, pickle, pathlib
 import config, solarlog_parse, output_db, output, filter
 
-def date_range(path, date_begin, date_end, parse_function, filter_functions, output_function,
-               encoding="utf-8", id=1):
+def date_range(path, date_begin, date_end, parse_function, filter_functions, output_function, id,
+               encoding="utf-8"):
     """Arguments:
     path: files with data
     date_begin: date to begin with
@@ -28,7 +28,7 @@ def date_range(path, date_begin, date_end, parse_function, filter_functions, out
             output_function(data, pv_system)
 
 def unpickle(path, pv_system):
-    dirname = os.path.join(config.path_data_raw, "pickle", ("%02d" % pv_system['id']))
+    dirname = os.path.join(config.path_data_pickled, ("%02d" % pv_system['id']))
     filename = pathlib.Path(path).stem
     try:
         with open(os.path.join(dirname, filename + ".pickle"), "rb") as file:

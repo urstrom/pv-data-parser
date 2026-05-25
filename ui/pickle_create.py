@@ -2,7 +2,7 @@ import sys, os, datetime, pickle
 import pv_data, config, solarlog_parse, filter, output
 def pickle_create(id, date_begin, date_end, parse_function):
     if parse_function is not None:
-        pv_data.date_range(f"{config.path_base}/{id:02d}",
+        pv_data.date_range(f"{config.path_data_raw}{id:02d}",
                            date_begin, date_end,
                            parse_function, [filter.production], output.pickle_write, id=id)
 
