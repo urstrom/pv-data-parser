@@ -68,7 +68,7 @@ CREATE TABLE solarlog_5min (
 ALTER TABLE solarlog_5min ADD PRIMARY KEY (system_id, inverter_id, tracker_id, measurement_time);
 ```
 
-# POSSIBLE WAYS OF USAGE
+# Possible ways of usage
 
 ## Daily run
 
@@ -225,6 +225,38 @@ END;
 $$;
 ```
 
+And create an additional constraint:
+```
+ALTER TABLE solarlog_5min
+ADD CONSTRAINT solarlog_5min_unique
+UNIQUE (system_id, inverter_id_recorded, tracker_id, measurement_time);
+```
+
 ## Testing
 
 Folder test, file pv_data_test.py contains tests. First the description of the test is printed, followed by outputs to sys.stderr. These sys.stderr outputs may be intentional for inspection purposes.
+
+## Installation at UrStrom
+
+First, pulled from the repository and ran testing. 
+
+```
+$ test/pv_data_test.py
+```
+
+Next, adapted config.py.
+
+Next, set up the database and assigned to a user.
+
+Next, set up table for solarlog data: (CREATE TABLE solarlog_5min, see above and also create a primary key as above).
+
+Next, set up table for updates (CREATE TABLE solarlog_5min_updates, see above), added trigger (log_solarlog_5min_updates, see above, and added constraint solarlog_5min_unique).
+
+Next, ran data import on a single system.
+
+```
+$ ui/daily.sh
+```
+
+Last, add this to crontab with crontab -e. 
+
