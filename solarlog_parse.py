@@ -63,7 +63,7 @@ def csv_data(path, pv_system, encoding='utf-8'):
                     pv_system['row_length'] = len(row)
                     header['line2'] = row
                     inverter_counter = -1
-                    re_1_0_0_field = re.compile("(\d)-(.*)")
+                    re_1_0_0_field = re.compile("(\\d)-(.*)")
 
                     field_counter = range(2, len(row))  # skip date and time at beginning
                     for i in field_counter:
@@ -86,7 +86,6 @@ def csv_data(path, pv_system, encoding='utf-8'):
                     if csv_data != []: # case where an error has occurred in csv_data_line
                         result.append(csv_data)
         return result
-
 
 def csv_data_line(parts, offsets, pv_system):
     """Parses a line of CSV min file."""
@@ -140,6 +139,7 @@ def csv_data_line(parts, offsets, pv_system):
                 return []
         result.append(inverter)
     return result
+
 
 
 def js_basevars(path, id=1):
