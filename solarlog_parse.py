@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import re, datetime, sys, os, pytz, csv, output_db, pickle
+import re, datetime, sys, os, pytz, csv, traceback
 
 import config
 
@@ -213,7 +213,9 @@ def js_basevars(path, id=1):
                 if pv_system['id'] in config.tracker_mask:
                     print("Applying tracker_mask for this system")
                     pv_system['tracker_mask'] = config.tracker_mask[pv_system['id']]
-            except NameError: pass
+            except NameError:
+                print(traceback.format_exc())
+
             # print(pv_system, file=sys.stderr)
             return pv_system
     else:
@@ -239,6 +241,7 @@ def js_data(path, pv_system, encoding='utf-8'):
                     line = line.decode(encoding)
                 except ValueError:
                     print(f"Parse error {pv_system['id']} {path}: no match " + encoding, file=sys.stderr)
+                    print(traceback.format_exc())
                     continue
                 if re_min.search(line): # cut off at position
                     (timestamp, data) = js_data_line(line)
@@ -249,6 +252,7 @@ def js_data(path, pv_system, encoding='utf-8'):
                             inverter_input = data.pop(0)
                         except IndexError:
                             print(f"Inverter input too short {path}", file=sys.stderr)
+                            print(traceback.format_exc())
                             return result
                         if pv_system['inverters'][inverter_counter]['is_production'] == 1:
                             inverter_output = {'ac': int(inverter_input.pop(0))}
@@ -260,12 +264,14 @@ def js_data(path, pv_system, encoding='utf-8'):
                             try:
                                 inverter_output['sum'] = int(inverter_input.pop(0))
                             except Exception as e:
+                                print(traceback.format_exc())
                                 print(f"{path}: {e}")
                             inverter_output['voltage'] = []
                             try:
                                 for _ in range(nr_trackers):
                                     inverter_output['voltage'].append(int(inverter_input.pop(0)))
                             except Exception as e:
+                                print(traceback.format_exc())
                                 print(f"{path}: {e}")
                             inverter_output['temperature'] = 0 # skip for data protection data.pop(0)
                         else: # is not a production counter, just insert 0ed data for data protection
