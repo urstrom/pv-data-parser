@@ -11,7 +11,8 @@ def production(array_in, pv_system):
 
     for line_in in array_in:
         timestamp = line_out = [line_in.pop(0)] # timestamp
-        for inverter_counter in range(len(pv_system['inverters'])):
+        number_of_inverters = len(pv_system['inverters'])
+        for inverter_counter in range(number_of_inverters):
             try:
                 if inverter_counter in production_indices:
                     line_out.append(line_in[inverter_counter])
@@ -27,7 +28,7 @@ def production(array_in, pv_system):
                     line_out.append(field_out)
             except Exception as e:
                 print(traceback.format_exc())
-                print(f"Exception: ({e}), Line in:({line_in}), Inverter_counter: ({inverter_counter}) Timestamp:({timestamp})")
+                print(f"Exception: ({e}), Line in:({line_in}), Inverter_counter: ({inverter_counter}), Number of inverters ({number_of_inverters}), Timestamp:({timestamp})")
             inverter_counter += 1
         array_out.append(line_out)
     return array_out
