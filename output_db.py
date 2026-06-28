@@ -20,8 +20,10 @@ def db_write(data, pv_system):
                                   f"{time_string}, {line[j]['dc'][tracker_counter]})")
                             cur.execute(sql_string)
                         except TimeoutError as e:
+                            print(traceback.format_exc())
                             print(f"Error: {e} from db_write")
                         except Exception as e:
+                            print(traceback.format_exc())
                             print(f"Error: {e} from db_write")
 
 

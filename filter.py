@@ -1,4 +1,4 @@
-import sys, datetime
+import sys, datetime, traceback
 
 def production(array_in, pv_system):
     if pv_system is None:
@@ -26,6 +26,7 @@ def production(array_in, pv_system):
                                 field_out[key].append(0)
                     line_out.append(field_out)
             except Exception as e:
+                print(traceback.format_exc())
                 print(f"{e}{line_in}")
             inverter_counter += 1
         array_out.append(line_out)
