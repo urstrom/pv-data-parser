@@ -86,6 +86,8 @@ def csv_data(path, pv_system, encoding='utf-8'):
                     if csv_data != []: # case where an error has occurred in csv_data_line
                         result.append(csv_data)
         return result
+    else:
+        print(f"File not found: {path}")
 
 def csv_data_line(parts, offsets, pv_system):
     """Parses a line of CSV min file."""
@@ -112,6 +114,7 @@ def csv_data_line(parts, offsets, pv_system):
                 return []
 
         except ValueError:
+            print(traceback.format_exc())
             print(f"Parse error csv_data_line id: {pv_system['id']} path: {pv_system['path']} {timestamp} Exception: "
                   f"INV {str(inverter_counter)} of (total) {str(len(offsets))} "
                   f"position {offsets[inverter_counter]['inverter']} "
