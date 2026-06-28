@@ -27,7 +27,7 @@ def production(array_in, pv_system):
                     line_out.append(field_out)
             except Exception as e:
                 print(traceback.format_exc())
-                print(f"{e}{line_in}")
+                print(f"Exception: ({e}), Line in:({line_in}), Array in:({array_in}")
             inverter_counter += 1
         array_out.append(line_out)
     return array_out
