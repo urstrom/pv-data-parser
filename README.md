@@ -224,6 +224,13 @@ RETURN NEW;
 END;
 $$;
 ```
+Add the trigger to the update function:
+```
+CREATE TRIGGER solarlog_5min_yield_update_trigger
+AFTER UPDATE ON solarlog_5min
+FOR EACH ROW
+EXECUTE FUNCTION log_solarlog_5min_updates();
+```
 
 And create an additional constraint:
 ```
